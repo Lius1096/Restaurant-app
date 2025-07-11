@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Confirmation de paiement</title>
+  <style>
+    :root {
+      --color-primary: #f97316;
+      --color-primary-dark: #ea580c;
+      --color-text: #111;
+      --color-bg: #ffffff;
+      --color-success: #10b981;
+      --color-success-bg: #ecfdf5;
+      --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--font-family);
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    main.container {
+      max-width: 460px;
+      width: 100%;
+      background-color: #fff;
+      padding: 2.5rem 2rem;
+      border-radius: 1.2rem;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+      transition: all 0.3s ease-in-out;
+      position: relative;
+      border: 2px dashed #ccc;
+    }
+
+    main.container::before,
+    main.container::after {
+      content: "";
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background-color: var(--color-bg);
+      border-radius: 50%;
+      left: -16px;
+    }
+
+    main.container::before {
+      top: 24px;
+    }
+
+    main.container::after {
+      bottom: 24px;
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      color: var(--color-success);
+      margin-bottom: 1rem;
+    }
+
+    h2 {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-top: 1rem;
+    }
+
+    p {
+      margin: 0.5rem 0;
+    }
+
+    .session-id {
+      display: inline-block;
+      margin: 0.6rem 0 1rem;
+      padding: 0.4rem 0.8rem;
+      background-color: var(--color-success-bg);
+      color: var(--color-success);
+      font-weight: bold;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      user-select: all;
+      border: 1px dashed var(--color-success);
+    }
+
+    #qrcode-container {
+      margin: 1.8rem 0 2.2rem;
+    }
+
+    #qrcode {
+      width: 140px;
+      height: 140px;
+      border-radius: 0.5rem;
+      border: 1px solid #ccc;
+      padding: 6px;
+      background: #fff;
+    }
+
+    .divider {
+      margin: 1.8rem 0;
+      border-top: 2px dashed #d1d5db;
+    }
+
+    a.dashboard-link,
+    button#download-ticket {
+      display: inline-block;
+      padding: 0.6rem 1.2rem;
+      margin: 0.4rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      text-decoration: none;
+      border: none;
+      transition: all 0.3s ease;
+    }
+
+    a.dashboard-link {
+      background-color: var(--color-primary);
+      color: white;
+    }
+
+    a.dashboard-link:hover,
+    a.dashboard-link:focus-visible {
+      background-color: var(--color-primary-dark);
+      outline: 3px solid #d97706;
+      outline-offset: 2px;
+    }
+
+    button#download-ticket {
+      background-color: #111;
+      color: white;
+    }
+
+    button#download-ticket:hover,
+    button#download-ticket:focus-visible {
+      background-color: #333;
+      outline: 3px solid #000;
+      outline-offset: 2px;
+    }
+
+    .error-message {
+      color: #dc2626;
+      background-color: #fee2e2;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      margin-top: 1rem;
+    }
+
+    .spinner {
+      margin: 2rem auto;
+      width: 48px;
+      height: 48px;
+      animation: spin 1s linear infinite;
+      stroke: var(--color-primary);
+      display: block;
+    }
+
+    @keyframes spin {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .sr-only {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
+  </style>
+</head>
+<body>
+  <main class="container" role="main" aria-live="polite" aria-busy="true" aria-label="Confirmation de paiement">
+    <h1>Paiement réussi !</h1>
+    <section id="confirmation" aria-describedby="desc-msg" tabindex="-1">
+      <p id="desc-msg">Récupération des détails de la commande...</p>
+    </section>
+
+    <svg class="spinner" role="img" aria-label="Chargement en cours" viewBox="0 0 50 50" aria-hidden="true" focusable="false">
+      <circle cx="25" cy="25" r="20" fill="none" stroke-width="5" stroke-linecap="round" stroke="currentColor"
+        stroke-dasharray="90,150" stroke-dashoffset="0"></circle>
+    </svg>
+  </main>
+
+  <script>
+    (function () {
+      const BASE_API = "http://localhost:5000";
+      const FRONT_URL = window.location.origin;
+      const params = new URLSearchParams(window.location.search);
+      const sessionId = params.get("session_id");
+
+      const confirmationEl = document.getElementById("confirmation");
+      const mainContainer = document.querySelector("main.container");
+      const spinner = document.querySelector(".spinner");
+
+      function setBusy(isBusy) {
+        mainContainer.setAttribute("aria-busy", isBusy ? "true" : "false");
+      }
+
+      if (!sessionId) {
+        confirmationEl.innerHTML = `
+          <div class="error-message" role="alert" tabindex="0">
+            Aucun identifiant de session trouvé dans l'URL.
+          </div>
+        `;
+        spinner.style.display = "none";
+        setBusy(false);
+        confirmationEl.focus();
+        return;
+      }
+
+      fetch(`${BASE_API}/api/payment/session/${sessionId}`)
+        .then((response) => {
+          if (!response.ok)
+            throw new Error("Erreur lors de la récupération de la session");
+          return response.json();
+        })
+        .then((data) => {
+          const orderId = data.orderId || data.id || sessionId;
+          const amountCents = data.amount_total || data.amount || 0;
+          const amount = (amountCents / 100).toFixed(2);
+          const dashboardUrl = `${FRONT_URL}/user-dashboard?order=${encodeURIComponent(orderId)}`;
+
+          confirmationEl.innerHTML = `
+            <h2>Merci pour votre commande !</h2>
+            <p>Montant payé : <strong>${amount} €</strong></p>
+            <p>Numéro de commande :</p>
+            <span class="session-id" tabindex="0" aria-label="Numéro de commande">${orderId}</span>
+
+            <div class="divider"></div>
+
+            <div id="qrcode-container" aria-label="QR Code pour accéder au tableau de bord">
+              <p>Scannez ce QR Code pour suivre votre commande :</p>
+              <img
+                id="qrcode"
+                src="https://api.qrserver.com/v1/create-qr-code/?data=${encodeURIComponent(dashboardUrl)}&size=140x140"
+                alt="QR Code menant au tableau de bord de la commande"
+              />
+              <span id="qr-desc" class="sr-only">QR Code qui mène à ${dashboardUrl}</span>
+            </div>
+
+            <a href="${dashboardUrl}" class="dashboard-link" target="_blank" rel="noopener noreferrer">
+              Accéder à mon tableau de bord
+            </a>
+
+            <button id="download-ticket" type="button">
+              Télécharger mon ticket
+            </button>
+
+            <a href="/order-tracking.html?orderId=${encodeURIComponent(orderId)}"
+              class="dashboard-link">
+              Suivre ma commande
+            </a>
+          `;
+
+          spinner.style.display = "none";
+          setBusy(false);
+          confirmationEl.focus();
+
+          const downloadBtn = document.getElementById("download-ticket");
+          downloadBtn.addEventListener("click", () => {
+            const link = document.createElement("a");
+            link.href = `${BASE_API}/api/ticket/${orderId}`;
+            link.download = `ticket-${orderId}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          });
+        })
+        .catch((error) => {
+          console.error(error);
+          confirmationEl.innerHTML = `
+            <div class="error-message" role="alert" tabindex="0">
+              Impossible de récupérer les informations de la commande. Veuillez réessayer plus tard.
+            </div>
+          `;
+          spinner.style.display = "none";
+          setBusy(false);
+          confirmationEl.focus();
+        });
+    })();
+  </script>
+</body>
+</html>

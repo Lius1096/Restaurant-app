@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRIPLE SIEBEN- Restaurant & Click & Collect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Animation pour les notifications */
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+            }
+
+            to {
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+            }
+        }
+
+        .notification {
+            animation: slideIn 0.5s forwards;
+        }
+
+        .notification.hide {
+            animation: fadeOut 0.5s forwards;
+        }
+
+        /* Effet de survol pour les plats */
+        .dish-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Style personnalisé pour les onglets */
+        .tab-active {
+            border-bottom: 3px solid #f59e0b;
+            color: #f59e0b;
+            font-weight: 600;
+        }
+
+        /* Animation pour le statut de commande */
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .status-pending {
+            background-color: #f59e0b;
+            animation: pulse 2s infinite;
+        }
+
+        .status-preparing {
+            background-color: #3b82f6;
+        }
+
+        .status-ready {
+            background-color: #10b981;
+        }
+
+        .status-cancelled {
+            background-color: #ef4444;
+        }
+
+        .status-completed {
+            background-color: #6b7280;
+        }
+
+        /* Style pour le loader Stripe */
+        .spinner {
+            animation: rotate 2s linear infinite;
+            z-index: 2;
+            width: 25px;
+            height: 25px;
+        }
+
+        .spinner .path {
+            stroke: #ffffff;
+            stroke-linecap: round;
+            animation: dash 1.5s ease-in-out infinite;
+        }
+
+        @keyframes rotate {
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes dash {
+            0% {
+                stroke-dasharray: 1, 150;
+                stroke-dashoffset: 0;
+            }
+
+            50% {
+                stroke-dasharray: 90, 150;
+                stroke-dashoffset: -35;
+            }
+
+            100% {
+                stroke-dasharray: 90, 150;
+                stroke-dashoffset: -124;
+            }
+        }
+
+        /* Style pour le compte à rebours */
+        .countdown {
+            font-family: monospace;
+            background-color: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+
+
+<body class="bg-gray-50 font-sans">
+
+    <!-- Barre de navigation -->
+    <nav class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-utensils text-2xl text-amber-500"></i>
+                <span class="text-xl font-bold text-gray-800">TRIPLE SIEBEN</span>
+            </div>
+
+            <div class="hidden md:flex space-x-8">
+                <a href="#home" class="text-gray-800 hover:text-amber-500 transition">Accueil</a>
+                <a href="#menu" class="text-gray-800 hover:text-amber-500 transition">Notre Carte</a>
+                <a href="#about" class="text-gray-800 hover:text-amber-500 transition">À Propos</a>
+                <a href="#contact" class="text-gray-800 hover:text-amber-500 transition">Contact</a>
+                <a href="#orders" id="my-orders-link" class="text-gray-800 hover:text-amber-500 transition hidden">Mes
+                    Commandes</a>
+                <a href="#admin" id="admin-link" class="text-gray-800 hover:text-amber-500 transition hidden">Admin</a>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <button id="cart-btn" class="relative p-2 text-gray-700 hover:text-amber-500">
+                    <i class="fas fa-shopping-cart text-xl"></i>
+                    <span id="cart-count"
+                        class="absolute -top-1 -right-1 bg-amber-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+                </button>
+
+                <button id="notification-btn" class="relative p-2 text-gray-700 hover:text-amber-500">
+                    <i class="fas fa-bell text-xl"></i>
+                    <span id="notification-count"
+                        class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center hidden">0</span>
+                </button>
+
+                <button id="user-btn" class="relative p-2 text-gray-700 hover:text-amber-500"
+                    onclick="window.location.href='/login-user.html'">
+                    <i class="fas fa-user text-xl"></i>
+                </button>
+
+
+                <button class="md:hidden p-2 text-gray-700" id="mobile-menu-button">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Menu mobile -->
+        <div class="md:hidden hidden bg-white w-full py-2 px-4 shadow-md" id="mobile-menu">
+            <a href="#home" class="block py-2 text-gray-800 hover:text-amber-500 transition">Accueil</a>
+            <a href="#menu" class="block py-2 text-gray-800 hover:text-amber-500 transition">Notre Carte</a>
+            <a href="#about" class="block py-2 text-gray-800 hover:text-amber-500 transition">À Propos</a>
+            <a href="#contact" class="block py-2 text-gray-800 hover:text-amber-500 transition">Contact</a>
+        </div>
+    </nav>
+
+    <!-- Bannière Hero -->
+    <section id="home" class="relative bg-gray-900 text-white">
+        <div class="absolute inset-0 bg-black opacity-50"></div>
+        <div class="container mx-auto px-4 py-32 relative z-10">
+            <div class="max-w-2xl">
+                <h1 class="text-4xl md:text-6xl font-bold mb-4">Découvrez l'art culinaire</h1>
+                <p class="text-xl mb-8">Des plats préparés avec passion et des produits frais et locaux.</p>
+                <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                    <a href="#menu"
+                        class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 text-center">
+                        Voir la carte
+                    </a>
+                    <a href="#order"
+                        class="bg-white hover:bg-gray-100 text-gray-800 font-bold py-3 px-6 rounded-lg transition duration-300 text-center">
+                        Commander en ligne
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Click & Collect -->
+    <section id="order" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Click & Collect</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Commandez en ligne et récupérez vos plats au restaurant sans
+                    attente.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition">
+                    <div class="text-amber-500 text-4xl mb-4">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">1. Choisissez vos plats</h3>
+                    <p class="text-gray-600">Parcourez notre carte et sélectionnez vos plats préférés.</p>
+                </div>
+
+                <div class="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition">
+                    <div class="text-amber-500 text-4xl mb-4">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">2. Sélectionnez un créneau</h3>
+                    <p class="text-gray-600">Choisissez l'heure à laquelle vous souhaitez récupérer votre commande.</p>
+                </div>
+
+                <div class="bg-gray-50 p-6 rounded-lg shadow-sm hover:shadow-md transition">
+                    <div class="text-amber-500 text-4xl mb-4">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">3. Récupérez au restaurant</h3>
+                    <p class="text-gray-600">Venez chercher votre commande à l'heure choisie, sans attente.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Menu -->
+    <section id="menu" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Notre Carte</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Découvrez nos spécialités préparées avec des produits frais
+                    et de saison.</p>
+            </div>
+
+            <!-- Filtres par catégorie -->
+            <div class="flex overflow-x-auto pb-2 mb-8 scrollbar-hide">
+                <div class="flex space-x-1">
+                    <button class="tab-button px-4 py-2 whitespace-nowrap tab-active" data-category="all">Tous</button>
+                    <button class="tab-button px-4 py-2 whitespace-nowrap" data-category="starters">Entrées</button>
+                    <button class="tab-button px-4 py-2 whitespace-nowrap" data-category="mains">Plats
+                        Principaux</button>
+                    <button class="tab-button px-4 py-2 whitespace-nowrap" data-category="desserts">Desserts</button>
+                    <button class="tab-button px-4 py-2 whitespace-nowrap" data-category="drinks">Boissons</button>
+                </div>
+            </div>
+
+            <!-- Liste des plats -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8" id="dishes-container">
+                <!-- Les plats seront ajoutés dynamiquement ici -->
+                <div class="text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-4xl text-amber-500 mb-4"></i>
+                    <p class="text-gray-600">Chargement des plats...</p>
+                </div>
+            </div>
+
+           <!-- Modal pour afficher les détails d’un plat -->
+<div id="dish-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+  <div class="bg-white rounded-lg p-6 w-full max-w-md relative shadow-lg">
+    <button id="close-dish-modal" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl">
+      <i class="fas fa-times"></i>
+    </button>
+    <h3 id="modal-dish-title" class="text-2xl font-bold mb-2"></h3>
+    <img id="modal-dish-image" src="" alt="" class="w-full h-48 object-cover rounded mb-4" />
+    <p id="modal-dish-description" class="text-gray-700 mb-4"></p>
+    <p id="modal-dish-price" class="text-amber-600 font-bold text-lg"></p>
+  </div>
+</div>
+
+
+
+        </div>
+    </section>
+
+    <!-- Section À Propos -->
+    <section id="about" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">À Propos de Nous</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Notre histoire et notre passion pour la cuisine.</p>
+            </div>
+
+            <div class="flex flex-col md:flex-row items-center gap-8">
+                <div class="md:w-1/2">
+                    <img src="https://images.unsplash.com/photo-1555396273-367ea4eb4db5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=500&q=80"
+                        alt="Notre restaurant" class="w-full rounded-lg shadow-lg">
+                </div>
+                <div class="md:w-1/2">
+                    <h3 class="text-2xl font-semibold mb-4">Notre Philosophie</h3>
+                    <p class="text-gray-600 mb-4">Fondé en 2019, TRIPLE SIEBEN est né de la passion pour une cuisine
+                        authentique et généreuse. Notre chef, formé dans les meilleures écoles de cuisine française, met
+                        tout son savoir-faire au service de vos papilles.</p>
+                    <p class="text-gray-600 mb-4">Nous privilégions les produits locaux et de saison, travaillant en
+                        direct avec les producteurs de notre région pour vous offrir une expérience culinaire unique.
+                    </p>
+                    <p class="text-gray-600">Notre engagement : qualité, fraîcheur et convivialité à chaque repas.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Contact -->
+    <section id="contact" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Contactez-nous</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Nous sommes à votre disposition pour toute question ou
+                    réservation.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">Informations</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-start space-x-4">
+                            <i class="fas fa-map-marker-alt text-amber-500 mt-1"></i>
+                            <div>
+                                <h4 class="font-medium">Adresse</h4>
+                                <p class="text-gray-600">Carré 350 Sénadé Cotonou</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-4">
+                            <i class="fas fa-arrow-right text-amber-500 mt-1"></i>
+                            <div>
+                                <h4 class="font-medium">Indication</h4>
+                                <p class="text-gray-600">Sènadé Von Copla</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-start space-x-4">
+                            <i class="fas fa-phone-alt text-amber-500 mt-1"></i>
+                            <div>
+                                <h4 class="font-medium">Téléphone</h4>
+                                <p class="text-gray-600">01 96 29 41 81</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-4">
+                            <i class="fas fa-envelope text-amber-500 mt-1"></i>
+                            <div>
+                                <h4 class="font-medium">Email</h4>
+                                <p class="text-gray-600">contact@triple-sieben.bj</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-4">
+                            <i class="fas fa-clock text-amber-500 mt-1"></i>
+                            <div>
+                                <h4 class="font-medium">Horaires</h4>
+                                <p class="text-gray-600">Mardi au Vendredi: 18h30 - 14h30 et 19h - 00h</p>
+                                <p class="text-gray-600">Samedi - Dimanche: 18h - 02h</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-semibold mb-4">Envoyez-nous un message</h3>
+                    <form id="contact-form" class="space-y-4">
+                        <div>
+                            <label for="contact-name" class="block text-gray-700 mb-2">Nom</label>
+                            <input type="text" id="contact-name"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                required>
+                        </div>
+                        <div>
+                            <label for="contact-email" class="block text-gray-700 mb-2">Email</label>
+                            <input type="email" id="contact-email"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                required>
+                        </div>
+                        <div>
+                            <label for="contact-message" class="block text-gray-700 mb-2">Message</label>
+                            <textarea id="contact-message" rows="4"
+                                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                                required></textarea>
+                        </div>
+                        <button type="submit"
+                            class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                            Envoyer
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Section Mes Commandes -->
+    <section id="orders" class="py-16 bg-white hidden">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Mes Commandes</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Consultez l'historique de vos commandes et leur statut.</p>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white rounded-lg overflow-hidden">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="py-3 px-4 text-left">N° Commande</th>
+                            <th class="py-3 px-4 text-left">Date</th>
+                            <th class="py-3 px-4 text-left">Heure de retrait</th>
+                            <th class="py-3 px-4 text-left">Total</th>
+                            <th class="py-3 px-4 text-left">Statut</th>
+                            <th class="py-3 px-4 text-left">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="user-orders-list" class="divide-y divide-gray-200">
+                        <!-- Les commandes seront ajoutées dynamiquement ici -->
+                        <tr>
+                            <td colspan="6" class="py-8 text-center text-gray-500">
+                                <i class="fas fa-utensils text-4xl text-amber-500 mb-4"></i>
+                                <p>Vous n'avez pas encore passé de commande</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+        
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-10">
+        <div class="container mx-auto px-6 max-w-7xl">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-8 md:space-y-0">
+
+                <!-- Logo et slogan -->
+                <div class="flex flex-col space-y-2 md:space-y-1">
+                    <div class="flex items-center space-x-3">
+                        <i class="fas fa-utensils text-3xl text-amber-500"></i>
+                        <span class="text-2xl font-extrabold tracking-wide">TRIPLE SIEBEN</span>
+                    </div>
+                    <p class="text-gray-400 text-sm md:text-base">Cuisine authentique depuis 2019</p>
+                </div>
+
+                <!-- Liens CGV, CGU, RGPD -->
+                <nav
+                    class="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-10 text-gray-400 text-sm font-medium tracking-wide">
+                    <a href="/cgv" class="hover:text-amber-500 transition duration-300 ease-in-out">CGV</a>
+                    <a href="/cgu" class="hover:text-amber-500 transition duration-300 ease-in-out">CGU</a>
+                    <a href="/rgpd" class="hover:text-amber-500 transition duration-300 ease-in-out">RGPD</a>
+                </nav>
+
+                <!-- Paiement sécurisé -->
+                <div class="flex space-x-5 text-gray-400 text-3xl items-center">
+                    <i class="fab fa-cc-visa hover:text-amber-500 transition duration-300"></i>
+                    <i class="fab fa-cc-mastercard hover:text-amber-500 transition duration-300"></i>
+                    <i class="fab fa-cc-paypal hover:text-amber-500 transition duration-300"></i>
+
+                    <!-- Icone générique mobile money -->
+                    <i class="fas fa-mobile-alt hover:text-amber-500 transition duration-300"></i>
+                </div>
+
+            </div>
+
+            <!-- Réseaux sociaux -->
+            <div class="flex justify-center space-x-8 mt-12 text-gray-400 text-xl">
+                <a href="#" class="hover:text-amber-500 transition duration-300">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="#" class="hover:text-amber-500 transition duration-300">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="#" class="hover:text-amber-500 transition duration-300">
+                    <i class="fab fa-tripadvisor"></i>
+                </a>
+            </div>
+
+            <!-- Copyright -->
+            <div class="border-t border-gray-800 mt-12 pt-6 text-center text-gray-500 text-xs sm:text-sm">
+                <p>&copy; 2023 TRIPLE SIEBEN. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+
+
+    <!-- Panier latéral -->
+    <div id="cart-sidebar"
+        class="fixed inset-y-0 right-0 w-full md:w-96 bg-white shadow-xl z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Votre Panier</h3>
+                <button id="close-cart" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div id="cart-items" class="space-y-4">
+                <!-- Les articles du panier seront ajoutés ici -->
+                <p class="text-gray-500 text-center py-8">Votre panier est vide</p>
+            </div>
+
+            <div class="border-t border-gray-200 mt-6 pt-6">
+                <div class="flex justify-between mb-2">
+                    <span class="font-semibold">Total</span>
+                    <span id="cart-total" class="font-bold">0,00 €</span>
+                </div>
+                <button id="checkout-btn"
+                    class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled>
+                    Valider la commande
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification sidebar -->
+    <div id="notification-sidebar"
+        class="fixed inset-y-0 right-0 w-full md:w-96 bg-white shadow-xl z-50 transform translate-x-full transition-transform duration-300 overflow-y-auto">
+        <div class="p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Vos Notifications</h3>
+                <button id="close-notifications" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div id="notification-list" class="space-y-4">
+                <!-- Les notifications seront ajoutées ici -->
+                <p class="text-gray-500 text-center py-8">Aucune notification</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+
+    <!-- Modal de commande -->
+    <!-- <div id="order-modal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold">Finaliser votre commande</h3>
+                    <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <form id="order-form">
+                    <div class="mb-4">
+                        <label for="name" class="block text-gray-700 mb-2">Nom complet</label>
+                        <input type="text" id="name"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                            required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="phone" class="block text-gray-700 mb-2">Téléphone</label>
+                        <input type="tel" id="phone"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                            required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="pickup-time" class="block text-gray-700 mb-2">Heure de retrait</label>
+                        <select id="pickup-time"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                            required>
+                            <option value="">Sélectionnez une heure</option>
+                            <option value="12:00">12:00 - 12:30</option>
+                            <option value="12:30">12:30 - 13:00</option>
+                            <option value="13:00">13:00 - 13:30</option>
+                            <option value="19:00">19:00 - 19:30</option>
+                            <option value="19:30">19:30 - 20:00</option>
+                            <option value="20:00">20:00 - 20:30</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="notes" class="block text-gray-700 mb-2">Notes supplémentaires</label>
+                        <textarea id="notes" rows="3"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+                    </div>
+
+                    <button type="submit"
+                        class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
+                        Confirmer la commande
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div> -->
+<!-- Modal de commande -->
+<div id="order-modal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+  <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+    <div class="p-6">
+      <div class="flex justify-between items-center mb-4">
+        <h3 class="text-xl font-bold">Finaliser votre commande</h3>
+        <button id="close-modal" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+
+      <form id="order-form">
+        <div class="mb-4">
+          <label for="name" class="block text-gray-700 mb-2">Nom complet</label>
+          <input type="text" id="name"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+            required>
+        </div>
+
+        <div class="mb-4">
+          <label for="phone" class="block text-gray-700 mb-2">Téléphone</label>
+          <input type="tel" id="phone"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+            required>
+        </div>
+
+        <div class="mb-4">
+          <label for="pickup-date" class="block text-gray-700 mb-2">Date de retrait</label>
+          <input type="date" id="pickup-date"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+            required>
+        </div>
+
+        <div class="mb-4">
+          <label for="pickup-time" class="block text-gray-700 mb-2">Heure de retrait</label>
+          <select id="pickup-time"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+            required>
+            <option value="">Sélectionnez une heure</option>
+            <option value="12:00">12:00 - 12:30</option>
+            <option value="12:30">12:30 - 13:00</option>
+            <option value="13:00">13:00 - 13:30</option>
+            <option value="19:00">19:00 - 19:30</option>
+            <option value="19:30">19:30 - 20:00</option>
+            <option value="20:00">20:00 - 20:30</option>
+          </select>
+        </div>
+
+        <div class="mb-4">
+          <label for="notes" class="block text-gray-700 mb-2">Notes supplémentaires</label>
+          <textarea id="notes" rows="3"
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
+        </div>
+
+        <button type="submit"
+          class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
+          Confirmer la commande
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+
+
+    <!-- Notification toast -->
+    <div id="notification-toast" class="fixed bottom-4 right-4 z-50 hidden">
+        <div class="bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg flex items-center space-x-4 notification">
+            <i class="fas fa-check-circle text-xl"></i>
+            <div>
+                <p class="font-semibold" id="toast-title">Succès</p>
+                <p id="toast-message">Votre commande a été passée avec succès!</p>
+            </div>
+            <button class="text-white hover:text-gray-200" id="close-toast">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+</body>
+<script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+
+<script>
+    // Variables globales
+    let cart = [];
+    let notifications = [];
+    let dishes = [];
+    let orders = [];
+    let currentUser = null;
+    let stripe = null;
+    let elements = null;
+    let clientSecret = null;
+    let currentOrderId = null;
+    let cancelTimers = {};
+
+    // DOM Elements
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const cartButton = document.getElementById('cart-btn');
+    const cartSidebar = document.getElementById('cart-sidebar');
+    const closeCartButton = document.getElementById('close-cart');
+    const cartItemsContainer = document.getElementById('cart-items');
+    const cartTotalElement = document.getElementById('cart-total');
+    const cartCountElement = document.getElementById('cart-count');
+    const checkoutButton = document.getElementById('checkout-btn');
+    const dishesContainer = document.getElementById('dishes-container');
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const orderModal = document.getElementById('order-modal');
+    const closeModalButton = document.getElementById('close-modal');
+    const orderForm = document.getElementById('order-form');
+    const pickupDateInput = document.getElementById('pickup-date');
+    const overlay = document.getElementById('overlay');
+    const notificationButton = document.getElementById('notification-btn');
+    const notificationSidebar = document.getElementById('notification-sidebar');
+    const closeNotificationsButton = document.getElementById('close-notifications');
+    const notificationList = document.getElementById('notification-list');
+    const notificationCountElement = document.getElementById('notification-count');
+    const notificationToast = document.getElementById('notification-toast');
+    const closeToastButton = document.getElementById('close-toast');
+    const toastTitle = document.getElementById('toast-title');
+    const toastMessage = document.getElementById('toast-message');
+    const contactForm = document.getElementById('contact-form');
+    const userButton = document.getElementById('user-btn');
+    const myOrdersLink = document.getElementById('my-orders-link');
+    const mobileMyOrdersLink = document.getElementById('mobile-my-orders-link');
+    const adminLink = document.getElementById('admin-link');
+    const mobileAdminLink = document.getElementById('mobile-admin-link');
+    const ordersSection = document.getElementById('orders');
+    const adminSection = document.getElementById('admin');
+    const userOrdersList = document.getElementById('user-orders-list');
+    const adminOrdersList = document.getElementById('admin-orders-list');
+    const totalOrdersElement = document.getElementById('total-orders');
+    const pendingOrdersElement = document.getElementById('pending-orders');
+    const readyOrdersElement = document.getElementById('ready-orders');
+    const cancelledOrdersElement = document.getElementById('cancelled-orders');
+    const todayRevenueElement = document.getElementById('today-revenue');
+    const weekRevenueElement = document.getElementById('week-revenue');
+    const monthRevenueElement = document.getElementById('month-revenue');
+    const addDishButton = document.getElementById('add-dish-btn');
+    const refreshOrdersButton = document.getElementById('refresh-orders-btn');
+    const addDishModal = document.getElementById('add-dish-modal');
+    const closeAddDishModalButton = document.getElementById('close-add-dish-modal');
+    const addDishForm = document.getElementById('add-dish-form');
+    const paymentModal = document.getElementById('payment-modal');
+    const closePaymentModalButton = document.getElementById('close-payment-modal');
+    const paymentElement = document.getElementById('payment-element');
+    const submitPaymentButton = document.getElementById('submit-payment-btn');
+    const paymentMessage = document.getElementById('payment-message');
+    const submitPaymentText = document.getElementById('submit-payment-text');
+    const submitPaymentSpinner = document.getElementById('submit-payment-spinner');
+    const submitOrderText = document.getElementById('submit-order-text');
+    const submitOrderSpinner = document.getElementById('submit-order-spinner');
+
+    // API Base URL
+    const API_BASE_URL = 'http://localhost:5000/api';
+    const STRIPE_PUBLIC_KEY = 'pk_test_51PJZ5eP4XJ0x3L3X2J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1Z4Q2X3J4Z1'
+    //  Connexion Socket.io
+    const socket = io('http://localhost:5000');
+
+    // Initialisation
+    document.addEventListener('DOMContentLoaded', function () {
+        fetchDishes();
+        loadCartFromLocalStorage();
+        updateCartUI();
+        loadNotificationsFromLocalStorage();
+        updateNotificationUI();
+
+        // Simuler une notification après 5 secondes
+        setTimeout(() => {
+            addNotification("Nouveau plat disponible", "Découvrez notre nouvelle spécialité: Magret de canard!");
+        }, 5000);
+    });
+
+    // Menu mobile
+    mobileMenuButton.addEventListener('click', function () {
+        mobileMenu.classList.toggle('hidden');
+    });
+
+    // Panier
+    cartButton.addEventListener('click', function () {
+        cartSidebar.classList.remove('translate-x-full');
+        overlay.classList.remove('hidden');
+    });
+
+    closeCartButton.addEventListener('click', function () {
+        cartSidebar.classList.add('translate-x-full');
+        overlay.classList.add('hidden');
+    });
+
+    checkoutButton.addEventListener('click', function () {
+        cartSidebar.classList.add('translate-x-full');
+        orderModal.classList.remove('hidden');
+    });
+
+    // Notifications
+    notificationButton.addEventListener('click', function () {
+        notificationSidebar.classList.remove('translate-x-full');
+        overlay.classList.remove('hidden');
+    });
+
+    closeNotificationsButton.addEventListener('click', function () {
+        notificationSidebar.classList.add('translate-x-full');
+        overlay.classList.add('hidden');
+    });
+
+    // Overlay
+    overlay.addEventListener('click', function () {
+        cartSidebar.classList.add('translate-x-full');
+        notificationSidebar.classList.add('translate-x-full');
+        orderModal.classList.add('hidden');
+        overlay.classList.add('hidden');
+    });
+
+
+//     // Modal de commande
+//     closeModalButton.addEventListener('click', function () {
+//         orderModal.classList.add('hidden');
+//         overlay.classList.add('hidden');
+//     });
+//     orderForm.addEventListener('submit', async function (e) {
+//         e.preventDefault();
+//         const name = document.getElementById('name').value;
+//         const phone = document.getElementById('phone').value;
+//         const pickupTime = document.getElementById('pickup-time').value;
+//         const notes = document.getElementById('notes').value;
+
+//         try {
+//             const token = localStorage.getItem('token');
+
+            
+//             // 1. Créer la commande dans la BDD (backend génère orderId et set paymentStatus à 'unpaid')
+// const payload = {
+//     customerName: name,
+//     customerPhone: phone,
+//     pickupTime,
+//     notes,
+//     items: cart,
+//     status: 'pending'
+// };
+// console.log("Données envoyées :", JSON.stringify(payload));
+
+//             const response = await fetch(`${API_BASE_URL}/orders`, {
+//     method: 'POST',
+//     headers: {
+//         'Content-Type': 'application/json',
+//         'Authorization': `Bearer ${token}`
+//     },
+//     body: JSON.stringify(payload)
+// });
+
+//             const data = await response.json();
+//             if (!response.ok) throw new Error(data.message || 'Erreur lors de la commande');
+
+//             // 2. Rejoindre la room Socket.io et notifier admin
+//             socket.emit('joinOrder', data.orderId);
+//             socket.emit('adminMessage', {
+//                 orderId: data.orderId,
+//                 text: `Nouvelle commande de ${name}, N°${data.orderId}`,
+//                 proposedItems: []
+//             });
+
+//             // 3. Calculer total, vider panier, UI update
+//             const totalAmount = calculateCartTotal(cart) * 100;
+//             cart = [];
+//             saveCartToLocalStorage();
+//             updateCartUI();
+//             orderModal.classList.add('hidden');
+//             overlay.classList.add('hidden');
+
+//             // 4. Créer session Stripe avec le orderId reçu du backend
+//             const stripeResponse = await fetch(`${API_BASE_URL}/payment/create-checkout-session`, {
+//                 method: 'POST',
+//                 headers: {
+//                     'Content-Type': 'application/json',
+//                     'Authorization': `Bearer ${token}`
+//                 },
+//                 body: JSON.stringify({
+//                     amount: totalAmount,
+//                     orderData: {
+//                         orderId: data.orderId,
+//                         name,
+//                         phone,
+//                         pickupTime,
+//                         notes,
+//                         items: cart // ou data.items si besoin, ici panier vidé donc à remettre si tu veux les items exacts
+//                     }
+//                 })
+//             });
+
+//             const stripeData = await stripeResponse.json();
+//             if (!stripeData.url) throw new Error("Impossible de rediriger vers le paiement");
+
+//             // 5. Rediriger vers Stripe checkout
+//             window.location.href = stripeData.url;
+
+//         } catch (error) {
+//             console.error('Erreur :', error);
+//             showToast("Erreur", error.message || "Une erreur est survenue");
+//         }
+//     });
+
+closeModalButton.addEventListener('click', () => {
+  orderModal.classList.add('hidden');
+  overlay.classList.add('hidden');
+});
+
+// Initialisation du champ date (min = aujourd'hui)
+function initPickupDate() {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  const minDate = `${yyyy}-${mm}-${dd}`;
+  pickupDateInput.min = minDate;
+  pickupDateInput.value = minDate;
+}
+
+// Récupérer les infos utilisateur pour pré-remplir le formulaire
+async function preloadUserData() {
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const response = await fetch(`${API_BASE_URL}/users/me`, { // endpoint API pour user connecté
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (!response.ok) throw new Error('Impossible de récupérer les infos utilisateur');
+
+    const user = await response.json();
+    if (user.customerName) document.getElementById('name').value = user.customerName;
+    else if (user.name) document.getElementById('name').value = user.name;
+    if (user.customerPhone) document.getElementById('phone').value = user.customerPhone;
+    else if (user.phone) document.getElementById('phone').value = user.phone;
+  } catch (err) {
+    console.warn('Pré-remplissage user impossible:', err);
+  }
+}
+
+// Fonction pour calculer le total panier (exemple)
+function calculateCartTotal(cart) {
+  return cart.reduce((total, item) => total + item.price * item.quantity, 0);
+}
+
+orderForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const name = document.getElementById('name').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  const pickupDate = document.getElementById('pickup-date').value;
+  const pickupHour = document.getElementById('pickup-time').value;
+  const notes = document.getElementById('notes').value.trim(); 
+
+  // Vérification des champs obligatoires
+  if (!name || !phone || !pickupDate || !pickupHour || !Array.isArray(cart) || cart.length === 0) {
+    showToast("Erreur", "Tous les champs sont requis et le panier ne doit pas être vide.");
+    return;
+  }
+
+
+  const pickupTimeISO = new Date(`${pickupDate}T${pickupHour}:00`).toISOString();
+
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) throw new Error("Utilisateur non authentifié");
+
+    const payload = {
+      customerName: name,
+      customerPhone: phone,
+      pickupTime: pickupTimeISO,
+      notes,
+      items: cart.map(item => ({
+        productId: item.id,
+        name: item.name,
+        quantity: item.quantity,
+        price: item.price
+      })),
+      status: 'pending'
+    };
+
+    // Envoi au backend
+    const response = await fetch(`${API_BASE_URL}/orders`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+    console.log("Réponse backend /orders :", data);
+    if (!response.ok) throw new Error(data.message || 'Erreur lors de la commande');
+
+    // Notification socket
+    socket.emit('joinOrder', data.orderId);
+    socket.emit('adminMessage', {
+      orderId: data.orderId,
+      text: `Nouvelle commande de ${name}, N°${data.orderId}`,
+      proposedItems: []
+    });
+
+    // Paiement Stripe
+const totalAmount = Math.round(calculateCartTotal(cart) * 100);
+
+    const stripeResponse = await fetch(`${API_BASE_URL}/payment/create-checkout-session`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        amount: totalAmount,
+        orderData: {
+          orderId: data.orderId,
+          name,
+          phone,
+          pickupTime: pickupTimeISO,
+          notes,
+          items: payload.items
+        }
+      })
+    });
+
+    const stripeData = await stripeResponse.json();
+    if (!stripeResponse.ok || !stripeData.url) throw new Error(stripeData.message || "Impossible de créer la session Stripe.");
+
+    // Vider le panier, fermer modal, rediriger
+    cart = [];
+    saveCartToLocalStorage();
+    updateCartUI();
+
+    orderModal.classList.add('hidden');
+    overlay.classList.add('hidden');
+
+    window.location.href = stripeData.url;
+
+  } catch (error) {
+    console.error('Erreur :', error);
+    showToast("Erreur", error.message || "Une erreur est survenue");
+  }
+});
+
+// Initialisation au chargement du modal
+function openOrderModal() {
+  initPickupDate();
+  preloadUserData();
+  orderModal.classList.remove('hidden');
+  overlay.classList.remove('hidden');
+}
+
+
+
+
+    // Contact form
+    contactForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const name = document.getElementById('contact-name').value;
+        const email = document.getElementById('contact-email').value;
+        const message = document.getElementById('contact-message').value;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/contact`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: name,
+                    email: email,
+                    message: message
+                })
+            });
+
+            if (response.ok) {
+                showToast("Message envoyé", "Votre message a bien été envoyé. Nous vous répondrons rapidement.");
+                contactForm.reset();
+            } else {
+                const data = await response.json();
+                throw new Error(data.message || 'Erreur lors de l\'envoi du message');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showToast("Erreur", error.message || "Une erreur est survenue lors de l'envoi du message");
+        }
+    });
+
+    // Toast notification
+    closeToastButton.addEventListener('click', function () {
+        hideToast();
+    });
+
+    // Filtres de catégorie
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            const category = this.getAttribute('data-category');
+
+            // Mettre à jour l'onglet actif
+            tabButtons.forEach(btn => btn.classList.remove('tab-active'));
+            this.classList.add('tab-active');
+
+            // Afficher les plats de la catégorie sélectionnée
+            renderDishes(category);
+            console.log('Catégorie sélectionnée :', category);
+            console.log('Catégories des plats :', dishes.map(d => d.category));
+
+        });
+    });
+
+    // Fonctions pour les plats
+    async function fetchDishes() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/dishes`);
+            if (!response.ok) {
+                throw new Error('Erreur lors du chargement des plats');
+            }
+            dishes = await response.json();
+            renderDishes('all');
+        } catch (error) {
+            console.error('Error:', error);
+            dishesContainer.innerHTML = `
+                    <div class="col-span-3 text-center py-8">
+                        <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
+                        <p class="text-gray-600">Erreur lors du chargement des plats</p>
+                        <button onclick="fetchDishes()" class="mt-4 bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                            <i class="fas fa-sync-alt mr-2"></i> Réessayer
+                        </button>
+                    </div>
+                `;
+        }
+    }
+
+    function openDishModal(dish) {
+        document.getElementById("modal-dish-title").textContent = dish.name;
+        document.getElementById("modal-dish-image").src = dish.image;
+        document.getElementById("modal-dish-description").textContent = dish.description;
+        document.getElementById("modal-dish-price").textContent = dish.price.toFixed(2) + " €";
+
+        document.getElementById("dish-modal").classList.remove("hidden");
+    }
+
+    document.getElementById("close-dish-modal").addEventListener("click", () => {
+        document.getElementById("dish-modal").classList.add("hidden");
+    });
+
+
+    function renderDishes(category) {
+        dishesContainer.innerHTML = '';
+
+        const filteredDishes = category === 'all'
+            ? dishes
+            : dishes.filter(dish => dish.category === category);
+
+        if (filteredDishes.length === 0) {
+            dishesContainer.innerHTML = `
+                    <div class="col-span-3 text-center py-8">
+                        <i class="fas fa-utensils text-4xl text-amber-500 mb-4"></i>
+                        <p class="text-gray-600">Aucun plat disponible dans cette catégorie</p>
+                    </div>
+                `;
+            return;
+        }
+
+        filteredDishes.forEach(dish => {
+            const dishElement = document.createElement('div');
+            dishElement.className = 'dish-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300 hover:shadow-lg cursor-pointer';
+            dishElement.innerHTML = `
+        <img src="${dish.image}" alt="${dish.name}" class="w-full h-48 object-cover">
+        <div class="p-4">
+            <h3 class="text-xl font-semibold mb-2">${dish.name}</h3>
+            <p class="text-gray-600 mb-4">${dish.description}</p>
+            <div class="flex justify-between items-center">
+                <span class="text-lg font-bold text-amber-600">${dish.price.toFixed(2)} €</span>
+                <button class="add-to-cart bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg transition duration-300" data-id="${dish._id}">
+                    <i class="fas fa-plus"></i> Ajouter
+                </button>
+            </div>
+        </div>
+    `;
+
+            // 👉 Clique sur la carte (hors bouton "ajouter") pour ouvrir le modal
+            dishElement.addEventListener('click', (e) => {
+                if (!e.target.closest('.add-to-cart')) {
+                    openDishModal(dish);
+                }
+            });
+
+            dishesContainer.appendChild(dishElement);
+        });
+
+
+        // Ajouter les événements aux boutons "Ajouter"
+        document.querySelectorAll('.add-to-cart').forEach(button => {
+            button.addEventListener('click', function () {
+                const dishId = this.getAttribute('data-id');
+                addToCart(dishId);
+
+                // Afficher une notification toast
+                const dish = dishes.find(d => d._id === dishId);
+                showToast("Article ajouté", `${dish.name} a été ajouté à votre panier!`);
+            });
+        });
+    }
+
+    // Fonctions pour le panier
+    function addToCart(dishId) {
+        const existingItem = cart.find(item => item.id === dishId);
+        const dish = dishes.find(d => d._id === dishId);
+
+        if (!dish) return;
+
+        if (existingItem) {
+            existingItem.quantity += 1;
+        } else {
+            cart.push({
+                id: dish._id,
+                name: dish.name,
+                price: dish.price,
+                quantity: 1,
+                image: dish.image,
+            });
+        }
+
+        saveCartToLocalStorage();
+        loadCartFromLocalStorage();
+        updateCartUI();
+    }
+
+
+
+    function updateCartUI() {
+        // Vider le conteneur des articles
+        cartItemsContainer.innerHTML = '';
+
+        if (cart.length === 0) {
+            cartItemsContainer.innerHTML = '<p class="text-gray-500 text-center py-8">Votre panier est vide</p>';
+            checkoutButton.disabled = true;
+            cartCountElement.classList.add('hidden');
+        } else {
+            let total = 0;
+
+            cart.forEach(item => {
+                const dish = dishes.find(d => d._id === item.id);
+                if (!dish) return;
+
+                const itemTotal = dish.price * item.quantity;
+                total += itemTotal;
+
+                const cartItemElement = document.createElement('div');
+                cartItemElement.className = 'flex justify-between items-center border-b border-gray-200 pb-4';
+                cartItemElement.innerHTML = `
+                        <div class="flex items-center space-x-4">
+    <img src="${dish.image}" alt="${dish.name}" class="w-16 h-16 object-cover rounded" />
+    <div>
+        <h4 class="font-medium">${dish.name}</h4>
+        <p class="text-gray-600 text-sm">${dish.price.toFixed(2)} € x ${item.quantity}</p>
+    </div>
+</div>
+
+                        <div class="flex items-center space-x-4">
+                            <span class="font-semibold">${itemTotal.toFixed(2)} €</span>
+                            <div class="flex items-center space-x-2">
+                                <button class="decrease-quantity text-gray-500 hover:text-amber-500" data-id="${dish._id}">
+                                    <i class="fas fa-minus text-xs"></i>
+                                </button>
+                                <span>${item.quantity}</span>
+                                <button class="increase-quantity text-gray-500 hover:text-amber-500" data-id="${dish._id}">
+                                    <i class="fas fa-plus text-xs"></i>
+                                </button>
+                            </div>
+                            <button class="remove-item text-red-500 hover:text-red-700" data-id="${dish._id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+
+                cartItemsContainer.appendChild(cartItemElement);
+            });
+
+            // Mettre à jour le total
+            cartTotalElement.textContent = total.toFixed(2) + ' €';
+            checkoutButton.disabled = false;
+
+            // Mettre à jour le compteur
+            const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+            cartCountElement.textContent = itemCount;
+            cartCountElement.classList.remove('hidden');
+
+            // Ajouter les événements aux boutons du panier
+            document.querySelectorAll('.decrease-quantity').forEach(button => {
+                button.addEventListener('click', function () {
+                    const itemId = this.getAttribute('data-id');
+                    updateCartItemQuantity(itemId, -1);
+                });
+            });
+
+            document.querySelectorAll('.increase-quantity').forEach(button => {
+                button.addEventListener('click', function () {
+                    const itemId = this.getAttribute('data-id');
+                    updateCartItemQuantity(itemId, 1);
+                });
+            });
+
+            document.querySelectorAll('.remove-item').forEach(button => {
+                button.addEventListener('click', function () {
+                    const itemId = this.getAttribute('data-id');
+                    removeFromCart(itemId);
+                });
+            });
+        }
+    }
+
+    function updateCartItemQuantity(itemId, change) {
+        const itemIndex = cart.findIndex(item => item.id === itemId);
+
+        if (itemIndex !== -1) {
+            cart[itemIndex].quantity += change;
+
+            if (cart[itemIndex].quantity <= 0) {
+                cart.splice(itemIndex, 1);
+            }
+
+            saveCartToLocalStorage();
+            updateCartUI();
+        }
+    }
+
+    function removeFromCart(itemId) {
+        cart = cart.filter(item => item.id !== itemId);
+        saveCartToLocalStorage();
+        updateCartUI();
+    }
+
+    function calculateCartTotal(items) {
+        return items.reduce((total, item) => total + item.price * item.quantity, 0);
+    }
+
+    function saveCartToLocalStorage() {
+        localStorage.setItem('cart', JSON.stringify(cart));
+    }
+
+    function loadCartFromLocalStorage() {
+        const savedCart = localStorage.getItem('cart');
+        if (savedCart) {
+            cart = JSON.parse(savedCart);
+        }
+    }
+
+    // Fonctions pour les notifications
+    function addNotification(title, message) {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+        notifications.unshift({
+            id: Date.now(),
+            title: title,
+            message: message,
+            time: timeString,
+            read: false
+        });
+
+        saveNotificationsToLocalStorage();
+        updateNotificationUI();
+    }
+
+    function updateNotificationUI() {
+        notificationList.innerHTML = '';
+
+        if (notifications.length === 0) {
+            notificationList.innerHTML = '<p class="text-gray-500 text-center py-8">Aucune notification</p>';
+            notificationCountElement.classList.add('hidden');
+        } else {
+            const unreadCount = notifications.filter(n => !n.read).length;
+
+            if (unreadCount > 0) {
+                notificationCountElement.textContent = unreadCount;
+                notificationCountElement.classList.remove('hidden');
+            } else {
+                notificationCountElement.classList.add('hidden');
+            }
+
+            notifications.forEach(notification => {
+                const notificationElement = document.createElement('div');
+                notificationElement.className = `p-4 rounded-lg ${notification.read ? 'bg-white' : 'bg-amber-50'}`;
+                notificationElement.innerHTML = `
+                        <div class="flex justify-between items-start mb-1">
+                            <h4 class="font-semibold">${notification.title}</h4>
+                            <span class="text-xs text-gray-500">${notification.time}</span>
+                        </div>
+                        <p class="text-gray-700">${notification.message}</p>
+                    `;
+
+                notificationElement.addEventListener('click', function () {
+                    if (!notification.read) {
+                        notification.read = true;
+                        saveNotificationsToLocalStorage();
+                        updateNotificationUI();
+                    }
+                });
+
+                notificationList.appendChild(notificationElement);
+            });
+        }
+    }
+
+    function saveNotificationsToLocalStorage() {
+        localStorage.setItem('notifications', JSON.stringify(notifications));
+    }
+
+    function loadNotificationsFromLocalStorage() {
+        const savedNotifications = localStorage.getItem('notifications');
+        if (savedNotifications) {
+            notifications = JSON.parse(savedNotifications);
+        }
+    }
+
+    // Fonctions pour le toast
+    function showToast(title, message) {
+        toastTitle.textContent = title;
+        toastMessage.textContent = message;
+        notificationToast.classList.remove('hidden');
+
+        // Masquer automatiquement après 5 secondes
+        setTimeout(() => {
+            hideToast();
+        }, 5000);
+    }
+
+    function hideToast() {
+        notificationToast.classList.add('hidden');
+    }
+
+    // Exposer fetchDishes pour le bouton de réessayer
+    window.fetchDishes = fetchDishes;
+</script>
+<script src="https://js.stripe.com/v3/"></script>
+
+</body>
+
+</html>
