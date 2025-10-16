@@ -22,6 +22,9 @@
           onclick="showSection('settings')">Paramètres</button>
         <button class="text-left px-3 py-2 rounded hover:bg-gray-200" onclick="showSection('addDish')">Ajouter
           plat</button>
+        <button class="text-left px-3 py-2 rounded hover:bg-red-100 text-red-600 mt-auto"
+          onclick="logout()">Déconnexion</button>
+
       </nav>
     </aside>
 
@@ -488,7 +491,7 @@
 
             window.addEventListener('DOMContentLoaded', fetchOrders);
 
-            
+
             document.getElementById('nextPage').addEventListener('click', () => {
               const filt = allOrders.filter(o => {
                 const nameF = document.getElementById('searchInput').value.toLowerCase();
@@ -635,14 +638,28 @@
           }
 
           function showSection(sectionId) {
-  const sections = ['orders', 'clients', 'settings', 'addDish'];
-  sections.forEach(id => document.getElementById(id).classList.toggle('hidden', id !== sectionId));
-  if (window.innerWidth < 768) toggleSidebar();
-}
+            const sections = ['orders', 'clients', 'settings', 'addDish'];
+            sections.forEach(id => document.getElementById(id).classList.toggle('hidden', id !== sectionId));
+            if (window.innerWidth < 768) toggleSidebar();
+          }
 
 
           // Afficher Commandes par défaut
           showSection('orders');
+        </script>
+
+        <script>
+          function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('role'); // au cas où tu stockes le rôle
+            window.location.href = '/login-admin.html'; // redirection vers la page de login admin
+          }
+
+          function showSection(sectionId) {
+            document.querySelectorAll('main > section').forEach(sec => sec.classList.add('hidden'));
+            const sec = document.getElementById(sectionId);
+            if (sec) sec.classList.remove('hidden');
+          }
         </script>
 
 </body>
