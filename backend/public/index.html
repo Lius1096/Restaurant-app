@@ -276,18 +276,20 @@
                 </div>
             </div>
 
-           <!-- Modal pour afficher les détails d’un plat -->
-<div id="dish-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
-  <div class="bg-white rounded-lg p-6 w-full max-w-md relative shadow-lg">
-    <button id="close-dish-modal" class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl">
-      <i class="fas fa-times"></i>
-    </button>
-    <h3 id="modal-dish-title" class="text-2xl font-bold mb-2"></h3>
-    <img id="modal-dish-image" src="" alt="" class="w-full h-48 object-cover rounded mb-4" />
-    <p id="modal-dish-description" class="text-gray-700 mb-4"></p>
-    <p id="modal-dish-price" class="text-amber-600 font-bold text-lg"></p>
-  </div>
-</div>
+            <!-- Modal pour afficher les détails d’un plat -->
+            <div id="dish-modal"
+                class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+                <div class="bg-white rounded-lg p-6 w-full max-w-md relative shadow-lg">
+                    <button id="close-dish-modal"
+                        class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-xl">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <h3 id="modal-dish-title" class="text-2xl font-bold mb-2"></h3>
+                    <img id="modal-dish-image" src="" alt="" class="w-full h-48 object-cover rounded mb-4" />
+                    <p id="modal-dish-description" class="text-gray-700 mb-4"></p>
+                    <p id="modal-dish-price" class="text-amber-600 font-bold text-lg"></p>
+                </div>
+            </div>
 
 
 
@@ -437,7 +439,7 @@
             </div>
         </div>
     </section>
-        
+
     <!-- Footer -->
     <footer class="bg-gray-900 text-white py-10">
         <div class="container mx-auto px-6 max-w-7xl">
@@ -545,8 +547,9 @@
     <!-- Overlay -->
     <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
 
+
     <!-- Modal de commande -->
-    <!-- <div id="order-modal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+    <div id="order-modal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
         <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
             <div class="p-6">
                 <div class="flex justify-between items-center mb-4">
@@ -567,6 +570,13 @@
                     <div class="mb-4">
                         <label for="phone" class="block text-gray-700 mb-2">Téléphone</label>
                         <input type="tel" id="phone"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                            required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="pickup-date" class="block text-gray-700 mb-2">Date de retrait</label>
+                        <input type="date" id="pickup-date"
                             class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
                             required>
                     </div>
@@ -599,69 +609,7 @@
                 </form>
             </div>
         </div>
-    </div> -->
-<!-- Modal de commande -->
-<div id="order-modal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-  <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-    <div class="p-6">
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-xl font-bold">Finaliser votre commande</h3>
-        <button id="close-modal" class="text-gray-500 hover:text-gray-700">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
-
-      <form id="order-form">
-        <div class="mb-4">
-          <label for="name" class="block text-gray-700 mb-2">Nom complet</label>
-          <input type="text" id="name"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-            required>
-        </div>
-
-        <div class="mb-4">
-          <label for="phone" class="block text-gray-700 mb-2">Téléphone</label>
-          <input type="tel" id="phone"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-            required>
-        </div>
-
-        <div class="mb-4">
-          <label for="pickup-date" class="block text-gray-700 mb-2">Date de retrait</label>
-          <input type="date" id="pickup-date"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-            required>
-        </div>
-
-        <div class="mb-4">
-          <label for="pickup-time" class="block text-gray-700 mb-2">Heure de retrait</label>
-          <select id="pickup-time"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-            required>
-            <option value="">Sélectionnez une heure</option>
-            <option value="12:00">12:00 - 12:30</option>
-            <option value="12:30">12:30 - 13:00</option>
-            <option value="13:00">13:00 - 13:30</option>
-            <option value="19:00">19:00 - 19:30</option>
-            <option value="19:30">19:30 - 20:00</option>
-            <option value="20:00">20:00 - 20:30</option>
-          </select>
-        </div>
-
-        <div class="mb-4">
-          <label for="notes" class="block text-gray-700 mb-2">Notes supplémentaires</label>
-          <textarea id="notes" rows="3"
-            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
-        </div>
-
-        <button type="submit"
-          class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
-          Confirmer la commande
-        </button>
-      </form>
     </div>
-  </div>
-</div>
 
 
 
@@ -817,155 +765,155 @@
 
 
 
-closeModalButton.addEventListener('click', () => {
-  orderModal.classList.add('hidden');
-  overlay.classList.add('hidden');
-});
-
-// Initialisation du champ date (min = aujourd'hui)
-function initPickupDate() {
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, '0');
-  const dd = String(today.getDate()).padStart(2, '0');
-  const minDate = `${yyyy}-${mm}-${dd}`;
-  pickupDateInput.min = minDate;
-  pickupDateInput.value = minDate;
-}
-
-// Récupérer les infos utilisateur pour pré-remplir le formulaire
-async function preloadUserData() {
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
-    const response = await fetch(`${API_BASE_URL}/users/me`, { // endpoint API pour user connecté
-      headers: { Authorization: `Bearer ${token}` }
+    closeModalButton.addEventListener('click', () => {
+        orderModal.classList.add('hidden');
+        overlay.classList.add('hidden');
     });
 
-    if (!response.ok) throw new Error('Impossible de récupérer les infos utilisateur');
+    // Initialisation du champ date (min = aujourd'hui)
+    function initPickupDate() {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const minDate = `${yyyy}-${mm}-${dd}`;
+        pickupDateInput.min = minDate;
+        pickupDateInput.value = minDate;
+    }
 
-    const user = await response.json();
-    if (user.customerName) document.getElementById('name').value = user.customerName;
-    else if (user.name) document.getElementById('name').value = user.name;
-    if (user.customerPhone) document.getElementById('phone').value = user.customerPhone;
-    else if (user.phone) document.getElementById('phone').value = user.phone;
-  } catch (err) {
-    console.warn('Pré-remplissage user impossible:', err);
-  }
-}
+    // Récupérer les infos utilisateur pour pré-remplir le formulaire
+    async function preloadUserData() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
 
-// Fonction pour calculer le total panier (exemple)
-function calculateCartTotal(cart) {
-  return cart.reduce((total, item) => total + item.price * item.quantity, 0);
-}
+            const response = await fetch(`${API_BASE_URL}/users/me`, { // endpoint API pour user connecté
+                headers: { Authorization: `Bearer ${token}` }
+            });
 
-orderForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
+            if (!response.ok) throw new Error('Impossible de récupérer les infos utilisateur');
 
-  const name = document.getElementById('name').value.trim();
-  const phone = document.getElementById('phone').value.trim();
-  const pickupDate = document.getElementById('pickup-date').value;
-  const pickupHour = document.getElementById('pickup-time').value;
-  const notes = document.getElementById('notes').value.trim(); 
-
-  // Vérification des champs obligatoires
-  if (!name || !phone || !pickupDate || !pickupHour || !Array.isArray(cart) || cart.length === 0) {
-    showToast("Erreur", "Tous les champs sont requis et le panier ne doit pas être vide.");
-    return;
-  }
-
-
-  const pickupTimeISO = new Date(`${pickupDate}T${pickupHour}:00`).toISOString();
-
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) throw new Error("Utilisateur non authentifié");
-
-    const payload = {
-      customerName: name,
-      customerPhone: phone,
-      pickupTime: pickupTimeISO,
-      notes,
-      items: cart.map(item => ({
-        productId: item.id,
-        name: item.name,
-        quantity: item.quantity,
-        price: item.price
-      })),
-      status: 'pending'
-    };
-
-    // Envoi au backend
-    const response = await fetch(`${API_BASE_URL}/orders`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify(payload)
-    });
-
-    const data = await response.json();
-    console.log("Réponse backend /orders :", data);
-    if (!response.ok) throw new Error(data.message || 'Erreur lors de la commande');
-
-    // Notification socket
-    socket.emit('joinOrder', data.orderId);
-    socket.emit('adminMessage', {
-      orderId: data.orderId,
-      text: `Nouvelle commande de ${name}, N°${data.orderId}`,
-      proposedItems: []
-    });
-
-    // Paiement Stripe
-const totalAmount = Math.round(calculateCartTotal(cart) * 100);
-
-    const stripeResponse = await fetch(`${API_BASE_URL}/payment/create-checkout-session`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({
-        amount: totalAmount,
-        orderData: {
-          orderId: data.orderId,
-          name,
-          phone,
-          pickupTime: pickupTimeISO,
-          notes,
-          items: payload.items
+            const user = await response.json();
+            if (user.customerName) document.getElementById('name').value = user.customerName;
+            else if (user.name) document.getElementById('name').value = user.name;
+            if (user.customerPhone) document.getElementById('phone').value = user.customerPhone;
+            else if (user.phone) document.getElementById('phone').value = user.phone;
+        } catch (err) {
+            console.warn('Pré-remplissage user impossible:', err);
         }
-      })
+    }
+
+    // Fonction pour calculer le total panier (exemple)
+    function calculateCartTotal(cart) {
+        return cart.reduce((total, item) => total + item.price * item.quantity, 0);
+    }
+
+    orderForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const name = document.getElementById('name').value.trim();
+        const phone = document.getElementById('phone').value.trim();
+        const pickupDate = document.getElementById('pickup-date').value;
+        const pickupHour = document.getElementById('pickup-time').value;
+        const notes = document.getElementById('notes').value.trim();
+
+        // Vérification des champs obligatoires
+        if (!name || !phone || !pickupDate || !pickupHour || !Array.isArray(cart) || cart.length === 0) {
+            showToast("Erreur", "Tous les champs sont requis et le panier ne doit pas être vide.");
+            return;
+        }
+
+
+        const pickupTimeISO = new Date(`${pickupDate}T${pickupHour}:00`).toISOString();
+
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) throw new Error("Utilisateur non authentifié");
+
+            const payload = {
+                customerName: name,
+                customerPhone: phone,
+                pickupTime: pickupTimeISO,
+                notes,
+                items: cart.map(item => ({
+                    productId: item.id,
+                    name: item.name,
+                    quantity: item.quantity,
+                    price: item.price
+                })),
+                status: 'pending'
+            };
+
+            // Envoi au backend
+            const response = await fetch(`${API_BASE_URL}/orders`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            console.log("Réponse backend /orders :", data);
+            if (!response.ok) throw new Error(data.message || 'Erreur lors de la commande');
+
+            // Notification socket
+            socket.emit('joinOrder', data.orderId);
+            socket.emit('adminMessage', {
+                orderId: data.orderId,
+                text: `Nouvelle commande de ${name}, N°${data.orderId}`,
+                proposedItems: []
+            });
+
+            // Paiement Stripe
+            const totalAmount = Math.round(calculateCartTotal(cart) * 100);
+
+            const stripeResponse = await fetch(`${API_BASE_URL}/payment/create-checkout-session`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    amount: totalAmount,
+                    orderData: {
+                        orderId: data.orderId,
+                        name,
+                        phone,
+                        pickupTime: pickupTimeISO,
+                        notes,
+                        items: payload.items
+                    }
+                })
+            });
+
+            const stripeData = await stripeResponse.json();
+            if (!stripeResponse.ok || !stripeData.url) throw new Error(stripeData.message || "Impossible de créer la session Stripe.");
+
+            // Vider le panier, fermer modal, rediriger
+            cart = [];
+            saveCartToLocalStorage();
+            updateCartUI();
+
+            orderModal.classList.add('hidden');
+            overlay.classList.add('hidden');
+
+            window.location.href = stripeData.url;
+
+        } catch (error) {
+            console.error('Erreur :', error);
+            showToast("Erreur", error.message || "Une erreur est survenue");
+        }
     });
 
-    const stripeData = await stripeResponse.json();
-    if (!stripeResponse.ok || !stripeData.url) throw new Error(stripeData.message || "Impossible de créer la session Stripe.");
-
-    // Vider le panier, fermer modal, rediriger
-    cart = [];
-    saveCartToLocalStorage();
-    updateCartUI();
-
-    orderModal.classList.add('hidden');
-    overlay.classList.add('hidden');
-
-    window.location.href = stripeData.url;
-
-  } catch (error) {
-    console.error('Erreur :', error);
-    showToast("Erreur", error.message || "Une erreur est survenue");
-  }
-});
-
-// Initialisation au chargement du modal
-function openOrderModal() {
-  initPickupDate();
-  preloadUserData();
-  orderModal.classList.remove('hidden');
-  overlay.classList.remove('hidden');
-}
+    // Initialisation au chargement du modal
+    function openOrderModal() {
+        initPickupDate();
+        preloadUserData();
+        orderModal.classList.remove('hidden');
+        overlay.classList.remove('hidden');
+    }
 
 
 
@@ -1028,16 +976,16 @@ function openOrderModal() {
 
     // Fonctions pour les plats
     // Fonction pour charger les plats depuis l’API
-async function fetchDishes() {
-  try {
-    const response = await fetch(`${API_BASE_URL}/dishes`);
-    if (!response.ok) throw new Error('Erreur lors du chargement des plats');
+    async function fetchDishes() {
+        try {
+            const response = await fetch(`${API_BASE_URL}/dishes`);
+            if (!response.ok) throw new Error('Erreur lors du chargement des plats');
 
-    dishes = await response.json();
-    renderDishes('all');
-  } catch (error) {
-    console.error('Error:', error);
-    dishesContainer.innerHTML = `
+            dishes = await response.json();
+            renderDishes('all');
+        } catch (error) {
+            console.error('Error:', error);
+            dishesContainer.innerHTML = `
       <div class="col-span-3 text-center py-8">
         <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
         <p class="text-gray-600">Erreur lors du chargement des plats</p>
@@ -1046,55 +994,55 @@ async function fetchDishes() {
         </button>
       </div>
     `;
-  }
-}
+        }
+    }
 
-// Fonction pour ouvrir le modal de détail d’un plat
-function openDishModal(dish) {
-  document.getElementById("modal-dish-title").textContent = dish.name;
-  
-  // ✅ Support des images Cloudinary (tableau)
-  const imageUrl = Array.isArray(dish.images) && dish.images.length > 0
-    ? dish.images[0]
-    : dish.image || '/assets/placeholder.jpg';
+    // Fonction pour ouvrir le modal de détail d’un plat
+    function openDishModal(dish) {
+        document.getElementById("modal-dish-title").textContent = dish.name;
 
-  document.getElementById("modal-dish-image").src = imageUrl;
-  document.getElementById("modal-dish-description").textContent = dish.description;
-  document.getElementById("modal-dish-price").textContent = dish.price.toFixed(2) + " €";
+        // ✅ Support des images Cloudinary (tableau)
+        const imageUrl = Array.isArray(dish.images) && dish.images.length > 0
+            ? dish.images[0]
+            : dish.image || '/assets/placeholder.jpg';
 
-  document.getElementById("dish-modal").classList.remove("hidden");
-}
+        document.getElementById("modal-dish-image").src = imageUrl;
+        document.getElementById("modal-dish-description").textContent = dish.description;
+        document.getElementById("modal-dish-price").textContent = dish.price.toFixed(2) + " €";
 
-document.getElementById("close-dish-modal").addEventListener("click", () => {
-  document.getElementById("dish-modal").classList.add("hidden");
-});
+        document.getElementById("dish-modal").classList.remove("hidden");
+    }
 
-// Fonction d’affichage des plats
-function renderDishes(category) {
-  dishesContainer.innerHTML = '';
+    document.getElementById("close-dish-modal").addEventListener("click", () => {
+        document.getElementById("dish-modal").classList.add("hidden");
+    });
 
-  const filteredDishes = category === 'all'
-    ? dishes
-    : dishes.filter(dish => dish.category === category);
+    // Fonction d’affichage des plats
+    function renderDishes(category) {
+        dishesContainer.innerHTML = '';
 
-  if (filteredDishes.length === 0) {
-    dishesContainer.innerHTML = `
+        const filteredDishes = category === 'all'
+            ? dishes
+            : dishes.filter(dish => dish.category === category);
+
+        if (filteredDishes.length === 0) {
+            dishesContainer.innerHTML = `
       <div class="col-span-3 text-center py-8">
         <i class="fas fa-utensils text-4xl text-amber-500 mb-4"></i>
         <p class="text-gray-600">Aucun plat disponible dans cette catégorie</p>
       </div>
     `;
-    return;
-  }
+            return;
+        }
 
-  filteredDishes.forEach(dish => {
-    const imageUrl = Array.isArray(dish.images) && dish.images.length > 0
-      ? dish.images[0]
-      : dish.image || '/assets/placeholder.jpg';
+        filteredDishes.forEach(dish => {
+            const imageUrl = Array.isArray(dish.images) && dish.images.length > 0
+                ? dish.images[0]
+                : dish.image || '/assets/placeholder.jpg';
 
-    const dishElement = document.createElement('div');
-    dishElement.className = 'dish-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300 hover:shadow-lg cursor-pointer';
-    dishElement.innerHTML = `
+            const dishElement = document.createElement('div');
+            dishElement.className = 'dish-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300 hover:shadow-lg cursor-pointer';
+            dishElement.innerHTML = `
       <img src="${imageUrl}" alt="${dish.name}" class="w-full h-48 object-cover">
       <div class="p-4">
         <h3 class="text-xl font-semibold mb-2">${dish.name}</h3>
@@ -1108,86 +1056,86 @@ function renderDishes(category) {
       </div>
     `;
 
-    // 👉 Clique sur la carte (hors bouton "ajouter") pour ouvrir le modal
-    dishElement.addEventListener('click', (e) => {
-      if (!e.target.closest('.add-to-cart')) {
-        openDishModal(dish);
-      }
-    });
+            // 👉 Clique sur la carte (hors bouton "ajouter") pour ouvrir le modal
+            dishElement.addEventListener('click', (e) => {
+                if (!e.target.closest('.add-to-cart')) {
+                    openDishModal(dish);
+                }
+            });
 
-    dishesContainer.appendChild(dishElement);
-  });
+            dishesContainer.appendChild(dishElement);
+        });
 
-  // Ajout des événements aux boutons "Ajouter"
-  document.querySelectorAll('.add-to-cart').forEach(button => {
-    button.addEventListener('click', function () {
-      const dishId = this.getAttribute('data-id');
-      addToCart(dishId);
+        // Ajout des événements aux boutons "Ajouter"
+        document.querySelectorAll('.add-to-cart').forEach(button => {
+            button.addEventListener('click', function () {
+                const dishId = this.getAttribute('data-id');
+                addToCart(dishId);
 
-      const dish = dishes.find(d => d._id === dishId);
-      showToast("Article ajouté", `${dish.name} a été ajouté à votre panier!`);
-    });
-  });
-}
+                const dish = dishes.find(d => d._id === dishId);
+                showToast("Article ajouté", `${dish.name} a été ajouté à votre panier!`);
+            });
+        });
+    }
 
     // Fonctions pour le panier
- function addToCart(dishId) {
-  const existingItem = cart.find(item => item.id === dishId);
-  const dish = dishes.find(d => d._id === dishId);
+    function addToCart(dishId) {
+        const existingItem = cart.find(item => item.id === dishId);
+        const dish = dishes.find(d => d._id === dishId);
 
-  if (!dish) return;
+        if (!dish) return;
 
-  // ✅ On récupère la bonne image Cloudinary (ou un fallback)
-  const imageUrl = Array.isArray(dish.images) && dish.images.length > 0
-    ? dish.images[0]
-    : dish.image || '/assets/placeholder.jpg';
+        // ✅ On récupère la bonne image Cloudinary (ou un fallback)
+        const imageUrl = Array.isArray(dish.images) && dish.images.length > 0
+            ? dish.images[0]
+            : dish.image || '/assets/placeholder.jpg';
 
-  if (existingItem) {
-    existingItem.quantity += 1;
-  } else {
-    cart.push({
-      id: dish._id,
-      name: dish.name,
-      price: dish.price,
-      quantity: 1,
-      image: imageUrl, // ✅ Correction ici
-    });
-  }
+        if (existingItem) {
+            existingItem.quantity += 1;
+        } else {
+            cart.push({
+                id: dish._id,
+                name: dish.name,
+                price: dish.price,
+                quantity: 1,
+                image: imageUrl, // ✅ Correction ici
+            });
+        }
 
-  saveCartToLocalStorage();
-  loadCartFromLocalStorage();
-  updateCartUI();
-}
+        saveCartToLocalStorage();
+        loadCartFromLocalStorage();
+        updateCartUI();
+    }
 
 
 
 
     function updateCartUI() {
-  // Vider le conteneur des articles
-  cartItemsContainer.innerHTML = '';
+        // Vider le conteneur des articles
+        cartItemsContainer.innerHTML = '';
 
-  if (cart.length === 0) {
-    cartItemsContainer.innerHTML = '<p class="text-gray-500 text-center py-8">Votre panier est vide</p>';
-    checkoutButton.disabled = true;
-    cartCountElement.classList.add('hidden');
-  } else {
-    let total = 0;
+        if (cart.length === 0) {
+            cartItemsContainer.innerHTML = '<p class="text-gray-500 text-center py-8">Votre panier est vide</p>';
+            checkoutButton.disabled = true;
+            cartCountElement.classList.add('hidden');
+        } else {
+            let total = 0;
 
-    cart.forEach(item => {
-      const dish = dishes.find(d => d._id === item.id);
-      if (!dish) return;
+            cart.forEach(item => {
+                const dish = dishes.find(d => d._id === item.id);
+                if (!dish) return;
 
-      const itemTotal = dish.price * item.quantity;
-      total += itemTotal;
+                const itemTotal = dish.price * item.quantity;
+                total += itemTotal;
 
-      // ✅ Gestion Cloudinary (tableau d’images)
-      const imageUrl = Array.isArray(dish.images) && dish.images.length > 0
-        ? dish.images[0]
-        : dish.image || '/assets/placeholder.jpg';
+                // ✅ Gestion Cloudinary (tableau d’images)
+                const imageUrl = Array.isArray(dish.images) && dish.images.length > 0
+                    ? dish.images[0]
+                    : dish.image || '/assets/placeholder.jpg';
 
-      const cartItemElement = document.createElement('div');
-      cartItemElement.className = 'flex justify-between items-center border-b border-gray-200 pb-4';
-      cartItemElement.innerHTML = `
+                const cartItemElement = document.createElement('div');
+                cartItemElement.className = 'flex justify-between items-center border-b border-gray-200 pb-4';
+                cartItemElement.innerHTML = `
         <div class="flex items-center space-x-4">
           <img src="${imageUrl}" alt="${dish.name}" class="w-16 h-16 object-cover rounded" />
           <div>
@@ -1213,74 +1161,74 @@ function renderDishes(category) {
         </div>
       `;
 
-      cartItemsContainer.appendChild(cartItemElement);
-    });
+                cartItemsContainer.appendChild(cartItemElement);
+            });
 
-    // Mettre à jour le total
-    cartTotalElement.textContent = total.toFixed(2) + ' €';
-    checkoutButton.disabled = false;
+            // Mettre à jour le total
+            cartTotalElement.textContent = total.toFixed(2) + ' €';
+            checkoutButton.disabled = false;
 
-    // Mettre à jour le compteur
-    const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-    cartCountElement.textContent = itemCount;
-    cartCountElement.classList.remove('hidden');
+            // Mettre à jour le compteur
+            const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+            cartCountElement.textContent = itemCount;
+            cartCountElement.classList.remove('hidden');
 
-    // Boutons quantité / suppression
-    document.querySelectorAll('.decrease-quantity').forEach(button => {
-      button.addEventListener('click', function () {
-        const itemId = this.getAttribute('data-id');
-        updateCartItemQuantity(itemId, -1);
-      });
-    });
+            // Boutons quantité / suppression
+            document.querySelectorAll('.decrease-quantity').forEach(button => {
+                button.addEventListener('click', function () {
+                    const itemId = this.getAttribute('data-id');
+                    updateCartItemQuantity(itemId, -1);
+                });
+            });
 
-    document.querySelectorAll('.increase-quantity').forEach(button => {
-      button.addEventListener('click', function () {
-        const itemId = this.getAttribute('data-id');
-        updateCartItemQuantity(itemId, 1);
-      });
-    });
+            document.querySelectorAll('.increase-quantity').forEach(button => {
+                button.addEventListener('click', function () {
+                    const itemId = this.getAttribute('data-id');
+                    updateCartItemQuantity(itemId, 1);
+                });
+            });
 
-    document.querySelectorAll('.remove-item').forEach(button => {
-      button.addEventListener('click', function () {
-        const itemId = this.getAttribute('data-id');
-        removeFromCart(itemId);
-      });
-    });
-  }
-}
+            document.querySelectorAll('.remove-item').forEach(button => {
+                button.addEventListener('click', function () {
+                    const itemId = this.getAttribute('data-id');
+                    removeFromCart(itemId);
+                });
+            });
+        }
+    }
 
-function updateCartItemQuantity(itemId, change) {
-  const itemIndex = cart.findIndex(item => item.id === itemId);
-  if (itemIndex !== -1) {
-    cart[itemIndex].quantity += change;
-    if (cart[itemIndex].quantity <= 0) cart.splice(itemIndex, 1);
-    saveCartToLocalStorage();
-    updateCartUI();
-  }
-}
+    function updateCartItemQuantity(itemId, change) {
+        const itemIndex = cart.findIndex(item => item.id === itemId);
+        if (itemIndex !== -1) {
+            cart[itemIndex].quantity += change;
+            if (cart[itemIndex].quantity <= 0) cart.splice(itemIndex, 1);
+            saveCartToLocalStorage();
+            updateCartUI();
+        }
+    }
 
-function removeFromCart(itemId) {
-  cart = cart.filter(item => item.id !== itemId);
-  saveCartToLocalStorage();
-  updateCartUI();
-}
+    function removeFromCart(itemId) {
+        cart = cart.filter(item => item.id !== itemId);
+        saveCartToLocalStorage();
+        updateCartUI();
+    }
 
-function calculateCartTotal(items) {
-  return items.reduce((total, item) => total + item.price * item.quantity, 0);
-}
+    function calculateCartTotal(items) {
+        return items.reduce((total, item) => total + item.price * item.quantity, 0);
+    }
 
-function saveCartToLocalStorage() {
-  localStorage.setItem('cart', JSON.stringify(cart));
-}
+    function saveCartToLocalStorage() {
+        localStorage.setItem('cart', JSON.stringify(cart));
+    }
 
-function loadCartFromLocalStorage() {
-  const savedCart = localStorage.getItem('cart');
-  if (savedCart) {
-    cart = JSON.parse(savedCart);
-  }
-}
+    function loadCartFromLocalStorage() {
+        const savedCart = localStorage.getItem('cart');
+        if (savedCart) {
+            cart = JSON.parse(savedCart);
+        }
+    }
 
-    
+
 
     // Fonctions pour les notifications
     function addNotification(title, message) {

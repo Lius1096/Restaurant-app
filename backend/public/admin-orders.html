@@ -70,10 +70,13 @@
             <select id="statusFilter" class="p-2 border rounded">
               <option value="">Tous statuts</option>
               <option value="pending">En attente</option>
-              <option value="prepared">Préparée</option>
-              <option value="delivered">Livrée</option>
+              <option value="confirmed">Confirmée</option>
+              <option value="preparing">En préparation</option>
+              <option value="ready">Prête</option>
+              <option value="completed">Livrée</option>
               <option value="cancelled">Annulée</option>
             </select>
+
             <button id="resetFilters" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Tout
               afficher</button>
           </div>
@@ -155,13 +158,21 @@
             </table>
           </div>
           <button onclick="addItemRow()" class="mt-2 text-sm text-blue-600 hover:underline">+ Ajouter un plat</button>
+          <!-- <button id="saveItemsBtn"
+            class="mt-2 ml-2 text-sm bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600">
+            Enregistrer les modifications
+          </button> -->
+
 
           <div class="mt-6">
             <label class="font-semibold">Statut :</label>
             <select id="detailStatus" class="mt-1 p-2 border rounded w-full">
+              <option value="">Tous statuts</option>
               <option value="pending">En attente</option>
-              <option value="prepared">Préparée</option>
-              <option value="delivered">Livrée</option>
+              <option value="confirmed">Confirmée</option>
+              <option value="preparing">En préparation</option>
+              <option value="ready">Prête</option>
+              <option value="completed">Livrée</option>
               <option value="cancelled">Annulée</option>
             </select>
             <button onclick="saveDetail()"
@@ -298,34 +309,96 @@
             currentOrder = null;
           }
 
+          // async function saveDetail() {
+          //   if (!currentOrder) return;
+          //   const status = document.getElementById('detailStatus').value;
+
+          //   const rows = document.querySelectorAll('#detailItemsTable tbody tr');
+          //   const items = [...rows].map(row => {
+          //     const inputs = row.querySelectorAll('input');
+          //     return {
+          //       name: inputs[0].value.trim(),
+          //       quantity: parseInt(inputs[1].value),
+          //       price: parseFloat(inputs[2].value)
+          //     };
+          //   }).filter(item => item.name && item.quantity > 0 && item.price >= 0);
+
+          //   try {
+          //     const res = await fetch(`${API_URL}/${currentOrder.orderId}`, {
+          //       method: 'PUT',
+          //       headers: {
+          //         'Content-Type': 'application/json',
+          //         'Authorization': `Bearer ${localStorage.getItem('token')}`
+          //       },
+          //       body: JSON.stringify({ status, items })
+          //     });
+
+          //     if (!res.ok) {
+          //       const err = await res.json();
+          //       alert(`Erreur mise à jour : ${err.message || res.statusText}`);
+          //       return;
+          //     }
+
+          //     socket.emit('orderUpdated', { orderId: currentOrder.orderId });
+          //     fetchOrders();
+          //     closeDetail();
+          //   } catch (err) {
+          //     console.error(err);
+          //     alert("Erreur réseau ou serveur.");
+          //   }
+          // }
+
           async function saveDetail() {
-            const status = document.getElementById('detailStatus').value;
+            if (!currentOrder) return;
 
             const rows = document.querySelectorAll('#detailItemsTable tbody tr');
-            const items = [...rows].map(row => {
-              const inputs = row.querySelectorAll('input');
+            const newItems = Array.from(rows).map(row => {
+              const [nameInput, qtyInput, priceInput] = row.querySelectorAll('input');
               return {
-                name: inputs[0].value.trim(),
-                quantity: parseInt(inputs[1].value),
-                price: parseFloat(inputs[2].value)
+                name: nameInput.value.trim(),
+                quantity: parseInt(qtyInput.value, 10),
+                price: parseFloat(priceInput.value)
               };
             }).filter(item => item.name && item.quantity > 0 && item.price >= 0);
 
-            const res = await fetch(`${API_URL}/${currentOrder.orderId}`, {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-              },
-              body: JSON.stringify({ status, items })
-            });
+            // Vérifie si les items ont changé
+            const itemsChanged = JSON.stringify(newItems) !== JSON.stringify(currentOrder.items);
+            let newStatus = document.getElementById('detailStatus').value || currentOrder.status;
 
-            if (res.ok) {
+            // Si l'admin modifie les items d'une commande pending, passer en 'modified'
+            if (itemsChanged && currentOrder.status === 'pending') {
+              newStatus = 'modified';
+            }
+
+            try {
+              const res = await fetch(`${API_URL}/${currentOrder.orderId}`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ status: newStatus, items: newItems })
+              });
+
+              if (!res.ok) {
+                const err = await res.json();
+                alert(`Erreur mise à jour : ${err.message || res.statusText}`);
+                return;
+              }
+
+              // Notifier le client en temps réel
               socket.emit('orderUpdated', { orderId: currentOrder.orderId });
+
               fetchOrders();
               closeDetail();
+            } catch (err) {
+              console.error(err);
+              alert("Erreur réseau ou serveur.");
             }
           }
+
+
+
           function deleteOrder() {
             const orderId = document.getElementById("detailOrderId").textContent;
             if (confirm("Êtes-vous sûr de vouloir supprimer définitivement cette commande ?")) {

@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
+const connectedUsers = require('./utils/socketState');
 
 const ticketRoutes = require('./routes/ticketRoutes');
 
@@ -43,7 +44,8 @@ const io = new Server(server, { cors: { origin: '*' } });
 
 // Import et config Socket.IO
 const setupSocket = require('./socket');
-const connectedUsers = setupSocket(io);
+setupSocket(io, connectedUsers);
+
 
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {

@@ -6,46 +6,79 @@
   <title>Suivi de commande - TRIPLE SIEBEN</title>
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @keyframes blink {
+      50% { border-color: transparent; }
+    }
+    #animatedMsg {
+      white-space: nowrap;
+      border-right: 2px solid #F97316;
+      animation: blink 1s infinite;
+    }
+    .node-line {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      height: 3px;
+      transform: translateY(-50%);
+      border-radius: 2px;
+    }
+    .circuit-node {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex justify-center items-start p-4">
-  <div class="bg-white rounded-2xl shadow-lg w-full max-w-md p-6 flex flex-col items-center">
-    <img src="/assets/logo.png" alt="Logo TRIPLE SIEBEN" class="w-40 mb-4" />
-    <h1 id="headerTitle" class="text-xl font-semibold text-gray-800 text-center mb-3">Suivi de la commande</h1>
-    <div id="animatedMsg" class="text-gray-600 italic min-h-[1.5rem] mb-6 text-center overflow-hidden border-r-2 border-blue-500"></div>
+<body class="bg-white min-h-screen flex justify-center items-start p-6">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 flex flex-col items-center border border-neutral-800">
+    <img src="/assets/logo.png" alt="Logo TRIPLE SIEBEN" class="w-32 mb-4" />
+    <h1 id="headerTitle" class="text-lg font-semibold text-black text-center mb-2">Suivi de la commande</h1>
+    <div id="animatedMsg" class="text-gray-400 italic mb-6 text-center min-h-[1.5rem]"></div>
 
-    <!-- Barre de progression -->
-    <div id="progressBar" class="w-full mb-6 relative flex items-center justify-between">
-      <div class="absolute top-1/2 left-0 right-0 h-1 bg-gray-300 transform -translate-y-1/2 rounded-full"></div>
-    </div>
+    <!-- Barre de progression style circuit -->
+    <div id="progressBar" class="relative w-full h-24 flex items-center justify-between mb-6"></div>
 
-    <!-- Détails de la commande -->
-    <div id="orderDetails" class="w-full bg-gray-50 rounded-xl p-4 shadow-inner hidden mb-6"></div>
+    <!-- Statut -->
+    <div id="orderStatus" class="text-center mb-6 hidden"></div>
+
+    <!-- Détails commande -->
+    <div id="orderDetails" class="w-full bg-neutral-800 rounded-xl p-4 shadow-inner hidden mb-6 text-white"></div>
 
     <!-- Buttons -->
     <div class="w-full flex flex-col sm:flex-row gap-4">
-      <button id="refreshBtn" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition">Rafraîchir</button>
-      <button id="userDashboardBtn" class="flex-1 bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 rounded-xl transition">Mon espace client</button>
+      <button id="refreshBtn" class="flex-1 bg-orange-500 hover:bg-orange-600 text-black font-semibold py-3 rounded-xl transition"> Rafraîchir</button>
+      <button id="userDashboardBtn" class="flex-1 bg-black border border-orange-500 hover:bg-orange-600 hover:text-black text-orange-400 font-semibold py-3 rounded-xl transition"> Espace client</button>
     </div>
 
-    <div id="error" class="text-red-600 mt-4 min-h-[1.25rem] text-center"></div>
+    <div id="error" class="text-orange-400 mt-4 min-h-[1.25rem] text-center"></div>
   </div>
 
   <script>
-    // ✅ Utilisation de l'API relative
-    const API_BASE = "/api"; // <-- ici le chemin relatif
+    const API_BASE = "/api";
     const orderId = new URLSearchParams(window.location.search).get('orderId');
     const token = localStorage.getItem('token');
     const progressBar = document.getElementById('progressBar');
+    const orderStatusEl = document.getElementById('orderStatus');
     const errorEl = document.getElementById('error');
     const refreshBtn = document.getElementById('refreshBtn');
     const userDashboardBtn = document.getElementById('userDashboardBtn');
     const animatedMsgEl = document.getElementById('animatedMsg');
     const headerTitle = document.getElementById('headerTitle');
 
-    const steps = ["reçue", "en préparation", "prête", "livrée"];
+    const steps = ["pending", "modified", "confirmed", "preparing", "ready", "completed", "cancelled"];
+    const stepLabels = {
+      pending: "En attente",
+      modified: "Modifiée",
+      confirmed: "Confirmée",
+      preparing: "Préparation",
+      ready: "Prête",
+      completed: "Terminée",
+      cancelled: "Annulée"
+    };
 
     if (!orderId) {
-      progressBar.innerHTML = '<div class="text-red-500 font-semibold text-center w-full">Aucune commande spécifiée.</div>';
+      progressBar.innerHTML = '<div class="text-orange-400 font-semibold text-center w-full">Aucune commande spécifiée.</div>';
       throw new Error("orderId manquant dans l'URL");
     }
 
@@ -64,64 +97,93 @@
     }
 
     const messages = [
-      "Merci de votre confiance, votre commande est entre de bonnes mains !",
-      "Suivez l'avancement de votre commande en temps réel.",
-      "N'hésitez pas à rafraîchir ou revenir à votre espace client.",
-      "Votre satisfaction est notre priorité chez TRIPLE SIEBEN."
+      "Merci pour votre confiance 🧡",
+      "Suivez l'évolution de votre commande en direct",
+      "Votre satisfaction est notre priorité chez TRIPLE SIEBEN "
     ];
-
-    let msgIndex = 0;
-    let charIndex = 0;
-    let deleting = false;
-
+    let msgIndex = 0, charIndex = 0, deleting = false;
     function typeEffect() {
       const currentMsg = messages[msgIndex];
-      if (!deleting) {
-        animatedMsgEl.textContent = currentMsg.slice(0, charIndex + 1);
-        charIndex++;
-        if (charIndex === currentMsg.length) {
-          deleting = true;
-          setTimeout(typeEffect, 2000);
-          return;
-        }
-      } else {
-        animatedMsgEl.textContent = currentMsg.slice(0, charIndex - 1);
-        charIndex--;
-        if (charIndex === 0) {
-          deleting = false;
-          msgIndex = (msgIndex + 1) % messages.length;
-        }
+      animatedMsgEl.textContent = currentMsg.slice(0, charIndex + (deleting ? -1 : 1));
+      charIndex += deleting ? -1 : 1;
+
+      if (!deleting && charIndex === currentMsg.length) {
+        deleting = true;
+        setTimeout(typeEffect, 2000);
+        return;
       }
-      setTimeout(typeEffect, deleting ? 50 : 100);
+      if (deleting && charIndex === 0) {
+        deleting = false;
+        msgIndex = (msgIndex + 1) % messages.length;
+      }
+      setTimeout(typeEffect, deleting ? 40 : 70);
     }
 
     function renderProgressBar(currentStatus) {
       progressBar.innerHTML = '';
+      const isCancelled = currentStatus === 'cancelled';
+      const activeSteps = steps.indexOf(currentStatus);
+
+      // Ligne principale (circuit)
+      const line = document.createElement('div');
+      line.className = 'node-line w-full bg-neutral-700';
+      progressBar.appendChild(line);
+
+      // Ligne de progression
+      const progressLine = document.createElement('div');
+      progressLine.className = `node-line bg-orange-500 transition-all duration-700`;
+      progressLine.style.width = isCancelled ? '100%' : `${(activeSteps / (steps.length - 2)) * 100}%`;
+      progressBar.appendChild(progressLine);
+
       steps.forEach((step, idx) => {
-        const isActive = steps.indexOf(step) <= steps.indexOf(currentStatus);
         const leftPercent = (idx / (steps.length - 1)) * 100;
+        const isActive = steps.indexOf(step) <= steps.indexOf(currentStatus) && !isCancelled;
 
-        const circle = document.createElement('div');
-        circle.className = `absolute transform -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-white font-semibold transition-colors duration-500 ${isActive ? 'bg-yellow-400' : 'bg-gray-300'}`;
-        circle.style.left = `${leftPercent}%`;
-        circle.textContent = idx + 1;
+        const node = document.createElement('div');
+        node.className = `circuit-node w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-semibold ${
+          isCancelled && step === 'cancelled'
+            ? 'border-red-600 bg-red-800 text-red-400'
+            : isActive
+            ? 'border-orange-500 bg-orange-500 text-black shadow-lg'
+            : 'border-neutral-600 bg-neutral-800 text-neutral-500'
+        }`;
+        node.style.left = `${leftPercent}%`;
+        node.textContent = idx + 1;
 
-        const label = document.createElement('span');
-        label.className = `absolute mt-6 text-xs font-medium ${isActive ? 'text-gray-800' : 'text-gray-400'}`;
+        const label = document.createElement('div');
+        label.className = `absolute text-xs text-center w-20 mt-12 -translate-x-1/2 ${
+          isActive ? 'text-orange-400' : 'text-neutral-500'
+        }`;
         label.style.left = `${leftPercent}%`;
-        label.style.transform = 'translateX(-50%)';
-        label.textContent = step.charAt(0).toUpperCase() + step.slice(1);
+        label.textContent = stepLabels[step];
 
-        progressBar.appendChild(circle);
+        progressBar.appendChild(node);
         progressBar.appendChild(label);
       });
 
-      const activeSteps = steps.indexOf(currentStatus);
-      const line = document.createElement('div');
-      line.className = 'absolute top-1/2 h-1 bg-yellow-400 rounded-full transition-all duration-500';
-      line.style.left = '0';
-      line.style.width = `${(activeSteps / (steps.length - 1)) * 100}%`;
-      progressBar.appendChild(line);
+      // Texte de statut
+      orderStatusEl.classList.remove("hidden");
+      if (isCancelled) {
+        orderStatusEl.innerHTML = `
+          <div class="inline-block px-4 py-1 bg-red-800 border border-red-600 text-red-400 font-semibold rounded-full">
+             Commande annulée
+          </div>
+          <p class="text-sm text-neutral-400 mt-1">Contactez-nous pour toute assistance.</p>
+        `;
+      } else if (currentStatus === "completed") {
+        orderStatusEl.innerHTML = `
+          <div class="inline-block px-4 py-1 bg-orange-500 text-black font-semibold rounded-full">
+             Commande terminée
+          </div>
+          <p class="text-sm text-neutral-400 mt-1">Merci pour votre confiance.</p>
+        `;
+      } else {
+        orderStatusEl.innerHTML = `
+          <div class="inline-block px-4 py-1 border border-orange-500 text-orange-400 font-semibold rounded-full">
+             Statut : ${stepLabels[currentStatus] || "En attente"}
+          </div>
+        `;
+      }
     }
 
     function renderOrderDetails(order) {
@@ -136,13 +198,13 @@
         const quantity = item.quantity || 1;
         const price = item.price || 0;
         total += quantity * price;
-        return `<li class="flex justify-between py-1 border-b border-dotted border-gray-300">${quantity}x ${item.name}<span>${(quantity*price).toFixed(2)} €</span></li>`;
+        return `<li class="flex justify-between py-1 border-b border-neutral-700">${quantity}x ${item.name}<span>${(quantity*price).toFixed(2)} €</span></li>`;
       }).join('');
 
       container.innerHTML = `
-        <h2 class="font-semibold text-gray-800 mb-2 border-b border-gray-300 pb-1">Détails de la commande</h2>
+        <h2 class="font-semibold text-orange-400 mb-2 border-b border-neutral-700 pb-1">Détails de la commande</h2>
         <ul>${listItems}</ul>
-        <div class="text-right font-semibold mt-2">Total : ${total.toFixed(2)} €</div>
+        <div class="text-right font-semibold mt-2 text-orange-400">Total : ${total.toFixed(2)} €</div>
       `;
       container.classList.remove("hidden");
     }
@@ -150,13 +212,15 @@
     async function fetchOrderStatus() {
       refreshBtn.disabled = true;
       try {
-        const res = await fetch(`${API_BASE}/orders/${orderId}`, {
+        const res = await fetch(`${API_BASE}/orders/my`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (!res.ok) throw new Error("Commande introuvable ou erreur serveur");
-        const data = await res.json();
-        renderProgressBar(data.status);
-        renderOrderDetails(data);
+        if (!res.ok) throw new Error("Impossible de récupérer vos commandes");
+        const orders = await res.json();
+        const order = orders.find(o => o._id === orderId || o.orderId === orderId);
+        if (!order) throw new Error("Commande introuvable");
+        renderProgressBar(order.status);
+        renderOrderDetails(order);
         errorEl.textContent = '';
       } catch (err) {
         errorEl.textContent = err.message || "Erreur lors de la récupération du statut.";
@@ -165,15 +229,17 @@
       }
     }
 
+    // --- Initialisation ---
     typeEffect();
     fetchUserInfo();
     fetchOrderStatus();
 
+    // --- WebSocket temps réel ---
     const socket = io({ auth: { token } });
+    socket.emit('joinOrder', orderId);
+    socket.on('orderUpdated', fetchOrderStatus);
     socket.on(`order-status-${orderId}`, (data) => {
-      if (data.status) {
-        renderProgressBar(data.status);
-      }
+      if (data.status) renderProgressBar(data.status);
     });
 
     refreshBtn.addEventListener('click', fetchOrderStatus);
