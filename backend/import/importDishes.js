@@ -16,6 +16,7 @@ mongoose.connect(MONGO_URI, {
 })
 .catch((err) => {
   console.error(' Erreur de connexion à MongoDB :', err);
+  
 });
 
 function importCSV() {

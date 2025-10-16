@@ -7,5 +7,6 @@ exports.submitContactForm = async (req, res) => {
     res.status(201).json({ message: 'Message envoyé' });
   } catch (error) {
     res.status(400).json({ message: error.message });
+    
   }
 };

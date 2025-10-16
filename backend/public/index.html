@@ -815,92 +815,7 @@
     });
 
 
-//     // Modal de commande
-//     closeModalButton.addEventListener('click', function () {
-//         orderModal.classList.add('hidden');
-//         overlay.classList.add('hidden');
-//     });
-//     orderForm.addEventListener('submit', async function (e) {
-//         e.preventDefault();
-//         const name = document.getElementById('name').value;
-//         const phone = document.getElementById('phone').value;
-//         const pickupTime = document.getElementById('pickup-time').value;
-//         const notes = document.getElementById('notes').value;
 
-//         try {
-//             const token = localStorage.getItem('token');
-
-            
-//             // 1. Créer la commande dans la BDD (backend génère orderId et set paymentStatus à 'unpaid')
-// const payload = {
-//     customerName: name,
-//     customerPhone: phone,
-//     pickupTime,
-//     notes,
-//     items: cart,
-//     status: 'pending'
-// };
-// console.log("Données envoyées :", JSON.stringify(payload));
-
-//             const response = await fetch(`${API_BASE_URL}/orders`, {
-//     method: 'POST',
-//     headers: {
-//         'Content-Type': 'application/json',
-//         'Authorization': `Bearer ${token}`
-//     },
-//     body: JSON.stringify(payload)
-// });
-
-//             const data = await response.json();
-//             if (!response.ok) throw new Error(data.message || 'Erreur lors de la commande');
-
-//             // 2. Rejoindre la room Socket.io et notifier admin
-//             socket.emit('joinOrder', data.orderId);
-//             socket.emit('adminMessage', {
-//                 orderId: data.orderId,
-//                 text: `Nouvelle commande de ${name}, N°${data.orderId}`,
-//                 proposedItems: []
-//             });
-
-//             // 3. Calculer total, vider panier, UI update
-//             const totalAmount = calculateCartTotal(cart) * 100;
-//             cart = [];
-//             saveCartToLocalStorage();
-//             updateCartUI();
-//             orderModal.classList.add('hidden');
-//             overlay.classList.add('hidden');
-
-//             // 4. Créer session Stripe avec le orderId reçu du backend
-//             const stripeResponse = await fetch(`${API_BASE_URL}/payment/create-checkout-session`, {
-//                 method: 'POST',
-//                 headers: {
-//                     'Content-Type': 'application/json',
-//                     'Authorization': `Bearer ${token}`
-//                 },
-//                 body: JSON.stringify({
-//                     amount: totalAmount,
-//                     orderData: {
-//                         orderId: data.orderId,
-//                         name,
-//                         phone,
-//                         pickupTime,
-//                         notes,
-//                         items: cart // ou data.items si besoin, ici panier vidé donc à remettre si tu veux les items exacts
-//                     }
-//                 })
-//             });
-
-//             const stripeData = await stripeResponse.json();
-//             if (!stripeData.url) throw new Error("Impossible de rediriger vers le paiement");
-
-//             // 5. Rediriger vers Stripe checkout
-//             window.location.href = stripeData.url;
-
-//         } catch (error) {
-//             console.error('Erreur :', error);
-//             showToast("Erreur", error.message || "Une erreur est survenue");
-//         }
-//     });
 
 closeModalButton.addEventListener('click', () => {
   orderModal.classList.add('hidden');
@@ -1112,243 +1027,260 @@ function openOrderModal() {
     });
 
     // Fonctions pour les plats
-    async function fetchDishes() {
-        try {
-            const response = await fetch(`${API_BASE_URL}/dishes`);
-            if (!response.ok) {
-                throw new Error('Erreur lors du chargement des plats');
-            }
-            dishes = await response.json();
-            renderDishes('all');
-        } catch (error) {
-            console.error('Error:', error);
-            dishesContainer.innerHTML = `
-                    <div class="col-span-3 text-center py-8">
-                        <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
-                        <p class="text-gray-600">Erreur lors du chargement des plats</p>
-                        <button onclick="fetchDishes()" class="mt-4 bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-                            <i class="fas fa-sync-alt mr-2"></i> Réessayer
-                        </button>
-                    </div>
-                `;
-        }
-    }
+    // Fonction pour charger les plats depuis l’API
+async function fetchDishes() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/dishes`);
+    if (!response.ok) throw new Error('Erreur lors du chargement des plats');
 
-    function openDishModal(dish) {
-        document.getElementById("modal-dish-title").textContent = dish.name;
-        document.getElementById("modal-dish-image").src = dish.image;
-        document.getElementById("modal-dish-description").textContent = dish.description;
-        document.getElementById("modal-dish-price").textContent = dish.price.toFixed(2) + " €";
+    dishes = await response.json();
+    renderDishes('all');
+  } catch (error) {
+    console.error('Error:', error);
+    dishesContainer.innerHTML = `
+      <div class="col-span-3 text-center py-8">
+        <i class="fas fa-exclamation-triangle text-4xl text-red-500 mb-4"></i>
+        <p class="text-gray-600">Erreur lors du chargement des plats</p>
+        <button onclick="fetchDishes()" class="mt-4 bg-amber-500 hover:bg-amber-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+          <i class="fas fa-sync-alt mr-2"></i> Réessayer
+        </button>
+      </div>
+    `;
+  }
+}
 
-        document.getElementById("dish-modal").classList.remove("hidden");
-    }
+// Fonction pour ouvrir le modal de détail d’un plat
+function openDishModal(dish) {
+  document.getElementById("modal-dish-title").textContent = dish.name;
+  
+  // ✅ Support des images Cloudinary (tableau)
+  const imageUrl = Array.isArray(dish.images) && dish.images.length > 0
+    ? dish.images[0]
+    : dish.image || '/assets/placeholder.jpg';
 
-    document.getElementById("close-dish-modal").addEventListener("click", () => {
-        document.getElementById("dish-modal").classList.add("hidden");
-    });
+  document.getElementById("modal-dish-image").src = imageUrl;
+  document.getElementById("modal-dish-description").textContent = dish.description;
+  document.getElementById("modal-dish-price").textContent = dish.price.toFixed(2) + " €";
 
+  document.getElementById("dish-modal").classList.remove("hidden");
+}
 
-    function renderDishes(category) {
-        dishesContainer.innerHTML = '';
+document.getElementById("close-dish-modal").addEventListener("click", () => {
+  document.getElementById("dish-modal").classList.add("hidden");
+});
 
-        const filteredDishes = category === 'all'
-            ? dishes
-            : dishes.filter(dish => dish.category === category);
+// Fonction d’affichage des plats
+function renderDishes(category) {
+  dishesContainer.innerHTML = '';
 
-        if (filteredDishes.length === 0) {
-            dishesContainer.innerHTML = `
-                    <div class="col-span-3 text-center py-8">
-                        <i class="fas fa-utensils text-4xl text-amber-500 mb-4"></i>
-                        <p class="text-gray-600">Aucun plat disponible dans cette catégorie</p>
-                    </div>
-                `;
-            return;
-        }
+  const filteredDishes = category === 'all'
+    ? dishes
+    : dishes.filter(dish => dish.category === category);
 
-        filteredDishes.forEach(dish => {
-            const dishElement = document.createElement('div');
-            dishElement.className = 'dish-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300 hover:shadow-lg cursor-pointer';
-            dishElement.innerHTML = `
-        <img src="${dish.image}" alt="${dish.name}" class="w-full h-48 object-cover">
-        <div class="p-4">
-            <h3 class="text-xl font-semibold mb-2">${dish.name}</h3>
-            <p class="text-gray-600 mb-4">${dish.description}</p>
-            <div class="flex justify-between items-center">
-                <span class="text-lg font-bold text-amber-600">${dish.price.toFixed(2)} €</span>
-                <button class="add-to-cart bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg transition duration-300" data-id="${dish._id}">
-                    <i class="fas fa-plus"></i> Ajouter
-                </button>
-            </div>
+  if (filteredDishes.length === 0) {
+    dishesContainer.innerHTML = `
+      <div class="col-span-3 text-center py-8">
+        <i class="fas fa-utensils text-4xl text-amber-500 mb-4"></i>
+        <p class="text-gray-600">Aucun plat disponible dans cette catégorie</p>
+      </div>
+    `;
+    return;
+  }
+
+  filteredDishes.forEach(dish => {
+    const imageUrl = Array.isArray(dish.images) && dish.images.length > 0
+      ? dish.images[0]
+      : dish.image || '/assets/placeholder.jpg';
+
+    const dishElement = document.createElement('div');
+    dishElement.className = 'dish-card bg-white rounded-lg shadow-md overflow-hidden transition duration-300 hover:shadow-lg cursor-pointer';
+    dishElement.innerHTML = `
+      <img src="${imageUrl}" alt="${dish.name}" class="w-full h-48 object-cover">
+      <div class="p-4">
+        <h3 class="text-xl font-semibold mb-2">${dish.name}</h3>
+        <p class="text-gray-600 mb-4">${dish.description}</p>
+        <div class="flex justify-between items-center">
+          <span class="text-lg font-bold text-amber-600">${dish.price.toFixed(2)} €</span>
+          <button class="add-to-cart bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg transition duration-300" data-id="${dish._id}">
+            <i class="fas fa-plus"></i> Ajouter
+          </button>
         </div>
+      </div>
     `;
 
-            // 👉 Clique sur la carte (hors bouton "ajouter") pour ouvrir le modal
-            dishElement.addEventListener('click', (e) => {
-                if (!e.target.closest('.add-to-cart')) {
-                    openDishModal(dish);
-                }
-            });
+    // 👉 Clique sur la carte (hors bouton "ajouter") pour ouvrir le modal
+    dishElement.addEventListener('click', (e) => {
+      if (!e.target.closest('.add-to-cart')) {
+        openDishModal(dish);
+      }
+    });
 
-            dishesContainer.appendChild(dishElement);
-        });
+    dishesContainer.appendChild(dishElement);
+  });
 
+  // Ajout des événements aux boutons "Ajouter"
+  document.querySelectorAll('.add-to-cart').forEach(button => {
+    button.addEventListener('click', function () {
+      const dishId = this.getAttribute('data-id');
+      addToCart(dishId);
 
-        // Ajouter les événements aux boutons "Ajouter"
-        document.querySelectorAll('.add-to-cart').forEach(button => {
-            button.addEventListener('click', function () {
-                const dishId = this.getAttribute('data-id');
-                addToCart(dishId);
-
-                // Afficher une notification toast
-                const dish = dishes.find(d => d._id === dishId);
-                showToast("Article ajouté", `${dish.name} a été ajouté à votre panier!`);
-            });
-        });
-    }
+      const dish = dishes.find(d => d._id === dishId);
+      showToast("Article ajouté", `${dish.name} a été ajouté à votre panier!`);
+    });
+  });
+}
 
     // Fonctions pour le panier
-    function addToCart(dishId) {
-        const existingItem = cart.find(item => item.id === dishId);
-        const dish = dishes.find(d => d._id === dishId);
+ function addToCart(dishId) {
+  const existingItem = cart.find(item => item.id === dishId);
+  const dish = dishes.find(d => d._id === dishId);
 
-        if (!dish) return;
+  if (!dish) return;
 
-        if (existingItem) {
-            existingItem.quantity += 1;
-        } else {
-            cart.push({
-                id: dish._id,
-                name: dish.name,
-                price: dish.price,
-                quantity: 1,
-                image: dish.image,
-            });
-        }
+  // ✅ On récupère la bonne image Cloudinary (ou un fallback)
+  const imageUrl = Array.isArray(dish.images) && dish.images.length > 0
+    ? dish.images[0]
+    : dish.image || '/assets/placeholder.jpg';
 
-        saveCartToLocalStorage();
-        loadCartFromLocalStorage();
-        updateCartUI();
-    }
+  if (existingItem) {
+    existingItem.quantity += 1;
+  } else {
+    cart.push({
+      id: dish._id,
+      name: dish.name,
+      price: dish.price,
+      quantity: 1,
+      image: imageUrl, // ✅ Correction ici
+    });
+  }
+
+  saveCartToLocalStorage();
+  loadCartFromLocalStorage();
+  updateCartUI();
+}
+
 
 
 
     function updateCartUI() {
-        // Vider le conteneur des articles
-        cartItemsContainer.innerHTML = '';
+  // Vider le conteneur des articles
+  cartItemsContainer.innerHTML = '';
 
-        if (cart.length === 0) {
-            cartItemsContainer.innerHTML = '<p class="text-gray-500 text-center py-8">Votre panier est vide</p>';
-            checkoutButton.disabled = true;
-            cartCountElement.classList.add('hidden');
-        } else {
-            let total = 0;
+  if (cart.length === 0) {
+    cartItemsContainer.innerHTML = '<p class="text-gray-500 text-center py-8">Votre panier est vide</p>';
+    checkoutButton.disabled = true;
+    cartCountElement.classList.add('hidden');
+  } else {
+    let total = 0;
 
-            cart.forEach(item => {
-                const dish = dishes.find(d => d._id === item.id);
-                if (!dish) return;
+    cart.forEach(item => {
+      const dish = dishes.find(d => d._id === item.id);
+      if (!dish) return;
 
-                const itemTotal = dish.price * item.quantity;
-                total += itemTotal;
+      const itemTotal = dish.price * item.quantity;
+      total += itemTotal;
 
-                const cartItemElement = document.createElement('div');
-                cartItemElement.className = 'flex justify-between items-center border-b border-gray-200 pb-4';
-                cartItemElement.innerHTML = `
-                        <div class="flex items-center space-x-4">
-    <img src="${dish.image}" alt="${dish.name}" class="w-16 h-16 object-cover rounded" />
-    <div>
-        <h4 class="font-medium">${dish.name}</h4>
-        <p class="text-gray-600 text-sm">${dish.price.toFixed(2)} € x ${item.quantity}</p>
-    </div>
-</div>
+      // ✅ Gestion Cloudinary (tableau d’images)
+      const imageUrl = Array.isArray(dish.images) && dish.images.length > 0
+        ? dish.images[0]
+        : dish.image || '/assets/placeholder.jpg';
 
-                        <div class="flex items-center space-x-4">
-                            <span class="font-semibold">${itemTotal.toFixed(2)} €</span>
-                            <div class="flex items-center space-x-2">
-                                <button class="decrease-quantity text-gray-500 hover:text-amber-500" data-id="${dish._id}">
-                                    <i class="fas fa-minus text-xs"></i>
-                                </button>
-                                <span>${item.quantity}</span>
-                                <button class="increase-quantity text-gray-500 hover:text-amber-500" data-id="${dish._id}">
-                                    <i class="fas fa-plus text-xs"></i>
-                                </button>
-                            </div>
-                            <button class="remove-item text-red-500 hover:text-red-700" data-id="${dish._id}">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
+      const cartItemElement = document.createElement('div');
+      cartItemElement.className = 'flex justify-between items-center border-b border-gray-200 pb-4';
+      cartItemElement.innerHTML = `
+        <div class="flex items-center space-x-4">
+          <img src="${imageUrl}" alt="${dish.name}" class="w-16 h-16 object-cover rounded" />
+          <div>
+            <h4 class="font-medium">${dish.name}</h4>
+            <p class="text-gray-600 text-sm">${dish.price.toFixed(2)} € x ${item.quantity}</p>
+          </div>
+        </div>
 
-                cartItemsContainer.appendChild(cartItemElement);
-            });
+        <div class="flex items-center space-x-4">
+          <span class="font-semibold">${itemTotal.toFixed(2)} €</span>
+          <div class="flex items-center space-x-2">
+            <button class="decrease-quantity text-gray-500 hover:text-amber-500" data-id="${dish._id}">
+              <i class="fas fa-minus text-xs"></i>
+            </button>
+            <span>${item.quantity}</span>
+            <button class="increase-quantity text-gray-500 hover:text-amber-500" data-id="${dish._id}">
+              <i class="fas fa-plus text-xs"></i>
+            </button>
+          </div>
+          <button class="remove-item text-red-500 hover:text-red-700" data-id="${dish._id}">
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+      `;
 
-            // Mettre à jour le total
-            cartTotalElement.textContent = total.toFixed(2) + ' €';
-            checkoutButton.disabled = false;
+      cartItemsContainer.appendChild(cartItemElement);
+    });
 
-            // Mettre à jour le compteur
-            const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-            cartCountElement.textContent = itemCount;
-            cartCountElement.classList.remove('hidden');
+    // Mettre à jour le total
+    cartTotalElement.textContent = total.toFixed(2) + ' €';
+    checkoutButton.disabled = false;
 
-            // Ajouter les événements aux boutons du panier
-            document.querySelectorAll('.decrease-quantity').forEach(button => {
-                button.addEventListener('click', function () {
-                    const itemId = this.getAttribute('data-id');
-                    updateCartItemQuantity(itemId, -1);
-                });
-            });
+    // Mettre à jour le compteur
+    const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+    cartCountElement.textContent = itemCount;
+    cartCountElement.classList.remove('hidden');
 
-            document.querySelectorAll('.increase-quantity').forEach(button => {
-                button.addEventListener('click', function () {
-                    const itemId = this.getAttribute('data-id');
-                    updateCartItemQuantity(itemId, 1);
-                });
-            });
+    // Boutons quantité / suppression
+    document.querySelectorAll('.decrease-quantity').forEach(button => {
+      button.addEventListener('click', function () {
+        const itemId = this.getAttribute('data-id');
+        updateCartItemQuantity(itemId, -1);
+      });
+    });
 
-            document.querySelectorAll('.remove-item').forEach(button => {
-                button.addEventListener('click', function () {
-                    const itemId = this.getAttribute('data-id');
-                    removeFromCart(itemId);
-                });
-            });
-        }
-    }
+    document.querySelectorAll('.increase-quantity').forEach(button => {
+      button.addEventListener('click', function () {
+        const itemId = this.getAttribute('data-id');
+        updateCartItemQuantity(itemId, 1);
+      });
+    });
 
-    function updateCartItemQuantity(itemId, change) {
-        const itemIndex = cart.findIndex(item => item.id === itemId);
+    document.querySelectorAll('.remove-item').forEach(button => {
+      button.addEventListener('click', function () {
+        const itemId = this.getAttribute('data-id');
+        removeFromCart(itemId);
+      });
+    });
+  }
+}
 
-        if (itemIndex !== -1) {
-            cart[itemIndex].quantity += change;
+function updateCartItemQuantity(itemId, change) {
+  const itemIndex = cart.findIndex(item => item.id === itemId);
+  if (itemIndex !== -1) {
+    cart[itemIndex].quantity += change;
+    if (cart[itemIndex].quantity <= 0) cart.splice(itemIndex, 1);
+    saveCartToLocalStorage();
+    updateCartUI();
+  }
+}
 
-            if (cart[itemIndex].quantity <= 0) {
-                cart.splice(itemIndex, 1);
-            }
+function removeFromCart(itemId) {
+  cart = cart.filter(item => item.id !== itemId);
+  saveCartToLocalStorage();
+  updateCartUI();
+}
 
-            saveCartToLocalStorage();
-            updateCartUI();
-        }
-    }
+function calculateCartTotal(items) {
+  return items.reduce((total, item) => total + item.price * item.quantity, 0);
+}
 
-    function removeFromCart(itemId) {
-        cart = cart.filter(item => item.id !== itemId);
-        saveCartToLocalStorage();
-        updateCartUI();
-    }
+function saveCartToLocalStorage() {
+  localStorage.setItem('cart', JSON.stringify(cart));
+}
 
-    function calculateCartTotal(items) {
-        return items.reduce((total, item) => total + item.price * item.quantity, 0);
-    }
+function loadCartFromLocalStorage() {
+  const savedCart = localStorage.getItem('cart');
+  if (savedCart) {
+    cart = JSON.parse(savedCart);
+  }
+}
 
-    function saveCartToLocalStorage() {
-        localStorage.setItem('cart', JSON.stringify(cart));
-    }
-
-    function loadCartFromLocalStorage() {
-        const savedCart = localStorage.getItem('cart');
-        if (savedCart) {
-            cart = JSON.parse(savedCart);
-        }
-    }
+    
 
     // Fonctions pour les notifications
     function addNotification(title, message) {

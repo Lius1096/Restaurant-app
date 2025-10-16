@@ -23,37 +23,53 @@
     </div>
   </div>
 
- <script>
+  <script>
   window.addEventListener('load', () => {
-  if (localStorage.getItem('token')) {
-    window.location.href = "admin-orders.html";
-    return; // stoppe l'exécution du reste
-  }
-
-  const loginForm = document.getElementById("loginForm");
-  loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const email = document.getElementById("loginEmail").value;
-    const password = document.getElementById("loginPassword").value;
-
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, role: 'admin' })
-    });
-
-    const data = await res.json();
-    alert(data.message);
-    if (data.token) {
-      localStorage.setItem("token", data.token);
+    // Si un admin est déjà connecté → redirige
+    const existingToken = localStorage.getItem('token');
+    const existingRole = localStorage.getItem('role');
+    if (existingToken && existingRole === 'admin') {
       window.location.href = "admin-orders.html";
+      return;
     }
+
+    const loginForm = document.getElementById("loginForm");
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value.trim();
+
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, role: 'admin' })
+        });
+
+        const data = await res.json();
+        alert(data.message || 'Connexion effectuée');
+
+        if (data.token) {
+          // ✅ Stockage complet
+          localStorage.setItem("token", data.token);
+          if (data.user) {
+            localStorage.setItem("userId", data.user._id || data.user.id || "");
+            localStorage.setItem("role", data.user.role || "admin");
+            localStorage.setItem("username", data.user.name || data.user.email || "Admin");
+          } else {
+            // fallback si le backend ne renvoie pas user
+            localStorage.setItem("role", "admin");
+          }
+
+          window.location.href = "admin-orders.html";
+        }
+      } catch (err) {
+        console.error("Erreur de connexion admin :", err);
+        alert("Erreur de connexion au serveur.");
+      }
+    });
   });
-});
-
-
-</script>
-
+  </script>
 
 </body>
 </html>

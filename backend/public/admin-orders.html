@@ -12,76 +12,113 @@
 <body class="bg-gray-100 text-gray-800">
   <div class="flex min-h-screen">
     <!-- Sidebar -->
-    <aside class="w-64 bg-white shadow-md p-6 flex flex-col">
+    <aside id="sidebar"
+      class="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-md p-6 flex flex-col transform -translate-x-full transition-transform duration-300 md:relative md:translate-x-0">
       <h2 class="text-xl font-bold mb-6">Menu Admin</h2>
       <nav class="flex flex-col gap-3">
-
-  <a href="" onclick="loadComponent('admin-orders')" class="block py-2 px-4 hover:bg-gray-200">Commandes</a>
-
-        <button class="text-left px-3 py-2 rounded hover:bg-gray-200" onclick="loadComponent('clients')">Clients</button>
-        <button class="text-left px-3 py-2 rounded hover:bg-gray-200" onclick="loadComponent('settings')">Paramètres</button>
+        <button class="text-left px-3 py-2 rounded hover:bg-gray-200" onclick="showSection('orders')">Commandes</button>
+        <button class="text-left px-3 py-2 rounded hover:bg-gray-200" onclick="showSection('clients')">Clients</button>
+        <button class="text-left px-3 py-2 rounded hover:bg-gray-200"
+          onclick="showSection('settings')">Paramètres</button>
+        <button class="text-left px-3 py-2 rounded hover:bg-gray-200" onclick="showSection('addDish')">Ajouter
+          plat</button>
       </nav>
     </aside>
 
-    <!-- Main content -->
-    <main class="flex-1 p-6 overflow-auto">
-      <button onclick="loadNotifications()" class="relative">
-  🔔
-  <span id="notifCount" class="absolute top-0 right-0 bg-red-500 text-white rounded-full text-xs px-1">0</span>
-</button>
-<div id="notifDropdown" class="hidden absolute bg-white shadow-lg p-4 rounded z-50">
-  <!-- Notifications injectées ici -->
-</div>
+    <!-- Overlay pour mobile -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden md:hidden"
+      onclick="toggleSidebar()"></div>
 
-      <h1 class="text-3xl font-bold mb-6 text-center">Dashboard Admin – Commandes</h1>
-      
+    <!-- Contenu principal -->
+    <div class="flex-1 flex flex-col md:ml-64">
+      <!-- Header fixe -->
+      <header
+        class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 bg-white shadow-md md:pl-72">
+        <!-- Bouton menu mobile -->
+        <button class="text-gray-700 text-2xl md:hidden" onclick="toggleSidebar()">☰</button>
 
-      <!-- Filters -->
-      <div class="flex flex-wrap gap-4 mb-4">
-        <input id="searchInput" type="text" placeholder="Nom client…" class="flex-1 p-2 border rounded" />
-        <input id="orderIdInput" type="text" placeholder="N° commande…" class="flex-1 p-2 border rounded" />
-        <select id="statusFilter" class="p-2 border rounded">
-          <option value="">Tous statuts</option>
-          <option value="pending">En attente</option>
-          <option value="prepared">Préparée</option>
-          <option value="delivered">Livrée</option>
-          <option value="cancelled">Annulée</option>
-        </select>
-        <button id="resetFilters" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Tout afficher</button>
-      </div>
+        <!-- Titre centré -->
+        <h1 class="text-lg font-semibold md:text-xl">Dashboard Admin</h1>
 
-      <!-- Orders Table -->
-      <div class="overflow-x-auto bg-white rounded shadow">
-        <table class="w-full text-left">
-          <thead class="bg-gray-200">
-            <tr>
-              <th class="p-3">Client</th>
-              <th class="p-3">N° Cmd</th>
-              <th class="p-3">Téléphone</th>
-              <th class="p-3">Heure</th>
-              <th class="p-3">Statut</th>
-              <th class="p-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody id="ordersTable" class="divide-y"></tbody>
-        </table>
-      </div>
+        <!-- Icône de notification à droite -->
+        <div class="relative">
+          <button onclick="toggleNotifications()" class="relative bg-white p-2 rounded shadow">
+            🔔
+            <span id="notifCount"
+              class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full text-xs px-1">0</span>
+          </button>
+          <div id="notifDropdown"
+            class="hidden absolute right-0 mt-2 w-64 max-h-64 overflow-y-auto bg-white shadow-lg rounded z-50 border border-gray-200">
+            <!-- Notifications -->
+          </div>
+        </div>
+      </header>
 
-      <!-- Pagination -->
-      <div class="flex justify-center items-center gap-4 mt-4">
-        <button id="prevPage" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Précédent</button>
-        <span id="paginationInfo" class="font-medium"></span>
-        <button id="nextPage" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Suivant</button>
-      </div>
-      <iframe src="/ajout-plat.html" style="width:100%; height:600px; border:none;"></iframe>
+      <!-- Main content -->
+      <main class="flex-1 pt-24 p-6 overflow-auto">
+        <!-- Commandes -->
+        <div id="orders" class="">
+          <h1 class="text-3xl font-bold mb-6 text-center">Dashboard Admin – Commandes</h1>
 
-    </main>
-    <main id="mainContent" class="p-4">
-  <!-- Le contenu externe sera injecté ici -->
-</main>
+          <!-- Filters -->
+          <div class="flex flex-wrap gap-4 mb-4">
+            <input id="searchInput" type="text" placeholder="Nom client…" class="flex-1 p-2 border rounded" />
+            <input id="orderIdInput" type="text" placeholder="N° commande…" class="flex-1 p-2 border rounded" />
+            <select id="statusFilter" class="p-2 border rounded">
+              <option value="">Tous statuts</option>
+              <option value="pending">En attente</option>
+              <option value="prepared">Préparée</option>
+              <option value="delivered">Livrée</option>
+              <option value="cancelled">Annulée</option>
+            </select>
+            <button id="resetFilters" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Tout
+              afficher</button>
+          </div>
 
+          <!-- Orders Table -->
+          <div class="overflow-x-auto bg-white rounded shadow">
+            <table class="w-full text-left">
+              <thead class="bg-gray-200">
+                <tr>
+                  <th class="p-3">Client</th>
+                  <th class="p-3">N° Cmd</th>
+                  <th class="p-3">Téléphone</th>
+                  <th class="p-3">Heure</th>
+                  <th class="p-3">Statut</th>
+                  <th class="p-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTable" class="divide-y"></tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="flex justify-center items-center gap-4 mt-4">
+            <button id="prevPage" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Précédent</button>
+            <span id="paginationInfo" class="font-medium"></span>
+            <button id="nextPage" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Suivant</button>
+          </div>
+        </div>
+
+        <!-- Clients -->
+        <div id="clients" class="hidden">
+          <h1 class="text-3xl font-bold mb-6 text-center">Clients</h1>
+          <div id="clientsContent"></div>
+        </div>
+
+        <!-- Paramètres -->
+        <div id="settings" class="hidden">
+          <h1 class="text-3xl font-bold mb-6 text-center">Paramètres</h1>
+          <div id="settingsContent"></div>
+        </div>
+
+        <!-- Ajouter Plat (iframe) -->
+        <div id="addDish" class="hidden">
+          <iframe src="/ajout-plat.html" class="w-full h-[calc(100vh-6rem)] border-none"></iframe>
+        </div>
+      </main>
+    </div>
   </div>
-
   <!-- Order Detail Modal -->
   <div id="detailModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
     <div class="bg-white w-full max-w-4xl rounded shadow-lg overflow-hidden flex flex-col">
@@ -95,7 +132,8 @@
           <h3 class="text-lg font-semibold mb-3">Client & Infos</h3>
           <div class="space-y-1">
             <p><strong>Nom :</strong> <span id="detailName"></span></p>
-            <p><strong>Téléphone :</strong> <span id="detailPhone"></span><a id="callButton" href="#" class="ml-2 text-blue-600 underline">Appeler</a></p>
+            <p><strong>Téléphone :</strong> <span id="detailPhone"></span><a id="callButton" href="#"
+                class="ml-2 text-blue-600 underline">Appeler</a></p>
             <p><strong>Heure :</strong> <span id="detailTime"></span></p>
           </div>
 
@@ -123,85 +161,77 @@
               <option value="delivered">Livrée</option>
               <option value="cancelled">Annulée</option>
             </select>
-            <button onclick="saveDetail()" class="mt-2 w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Enregistrer</button>
+            <button onclick="saveDetail()"
+              class="mt-2 w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Enregistrer</button>
           </div>
 
           <div class="mt-4 flex flex-col sm:flex-row gap-3">
-            <button onclick="cancelOrder()" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 w-full">Annuler la commande</button>
-            <button onclick="sendReplacementProposal()" class="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 w-full">Proposer un remplacement</button>
-            <button onclick="deleteOrder()" class="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 w-full">Supprimer définitivement</button>
+            <button onclick="cancelOrder()"
+              class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 w-full">Annuler la commande</button>
+            <button onclick="sendReplacementProposal()"
+              class="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600 w-full">Proposer un
+              remplacement</button>
+            <button onclick="deleteOrder()"
+              class="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 w-full">Supprimer définitivement</button>
           </div>
         </div>
 
-        <!-- RIGHT CHAT
-        <div class="w-1/2 p-4 border-l flex flex-col">
+
+
+        <div class="w-full md:w-1/2 p-4 border-l flex flex-col">
           <h3 class="font-semibold mb-2">Chat temps réel</h3>
-          <div id="chatWindow" class="flex-1 overflow-auto border p-2 rounded mb-2"></div>
-          <textarea id="chatInput" rows="2" class="w-full border p-2 rounded" placeholder="Message…"></textarea>
-          <button onclick="sendChat()"
-            class="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Envoyer</button>
-        </div>
-      </div>
-    </div>
-  </div> -->
 
-  <div class="w-full md:w-1/2 p-4 border-l flex flex-col">
-  <h3 class="font-semibold mb-2">Chat temps réel</h3>
+          <!-- ZONE DE MESSAGES FIXE + SCROLLABLE -->
+          <div id="chatWindow" class="h-64 overflow-y-auto border p-2 rounded mb-2 bg-gray-50 space-y-2">
+            <!-- Les messages s'ajoutent ici -->
+          </div>
 
-  <!-- ZONE DE MESSAGES FIXE + SCROLLABLE -->
-  <div id="chatWindow"
-       class="h-64 overflow-y-auto border p-2 rounded mb-2 bg-gray-50 space-y-2">
-    <!-- Les messages s'ajoutent ici -->
-  </div>
-
-  <!-- ZONE DE TEXTE -->
-  <textarea id="chatInput"
-            rows="2"
-            class="w-full border p-2 rounded resize-none"
+          <!-- ZONE DE TEXTE -->
+          <textarea id="chatInput" rows="2" class="w-full border p-2 rounded resize-none"
             placeholder="Message…"></textarea>
 
-  <!-- BOUTON -->
-  <button onclick="sendChat()"
-          class="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-150">
-    Envoyer
-  </button>
-</div>
+          <!-- BOUTON -->
+          <button onclick="sendChat()"
+            class="mt-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition duration-150">
+            Envoyer
+          </button>
+        </div>
 
 
-  <script>
-    const API_URL = 'http://localhost:5000/api/orders';
-    const socket = io('http://localhost:5000');
-    let allOrders = [], currentPage = 1, itemsPerPage = 10;
-    let currentOrder = null;
+        <script>
+          const API_URL = 'http://localhost:5000/api/orders';
+          const socket = io('http://localhost:5000');
+          let allOrders = [], currentPage = 1, itemsPerPage = 10;
+          let currentOrder = null;
 
-    async function fetchOrders() {
-      const res = await fetch(API_URL, {
-        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-      });
-      allOrders = await res.json();
-      displayOrders();
-    }
+          async function fetchOrders() {
+            const res = await fetch(API_URL, {
+              headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
+            allOrders = await res.json();
+            displayOrders();
+          }
 
 
-function displayOrders() {
-  const t = document.getElementById('ordersTable');
-  t.innerHTML = '';
-  const nameF = document.getElementById('searchInput').value.toLowerCase();
-  const idF = document.getElementById('orderIdInput').value.toLowerCase();
-  const stF = document.getElementById('statusFilter').value;
-  const filt = allOrders.filter(o =>
-    (!nameF || o.customerName.toLowerCase().includes(nameF)) &&
-    (!idF || o.orderId.toLowerCase().includes(idF)) &&
-    (!stF || o.status === stF)
-  );
-  const total = Math.ceil(filt.length / itemsPerPage);
-  if (currentPage > total) currentPage = total || 1;
-  const start = (currentPage - 1) * itemsPerPage;
-  document.getElementById('paginationInfo').innerText = `Page ${currentPage} / ${total || 1}`;
-  filt.slice(start, start + itemsPerPage).forEach(o => {
-    const tr = document.createElement('tr');
-    tr.className = 'hover:bg-gray-50';
-    tr.innerHTML = `
+          function displayOrders() {
+            const t = document.getElementById('ordersTable');
+            t.innerHTML = '';
+            const nameF = document.getElementById('searchInput').value.toLowerCase();
+            const idF = document.getElementById('orderIdInput').value.toLowerCase();
+            const stF = document.getElementById('statusFilter').value;
+            const filt = allOrders.filter(o =>
+              (!nameF || o.customerName.toLowerCase().includes(nameF)) &&
+              (!idF || o.orderId.toLowerCase().includes(idF)) &&
+              (!stF || o.status === stF)
+            );
+            const total = Math.ceil(filt.length / itemsPerPage);
+            if (currentPage > total) currentPage = total || 1;
+            const start = (currentPage - 1) * itemsPerPage;
+            document.getElementById('paginationInfo').innerText = `Page ${currentPage} / ${total || 1}`;
+            filt.slice(start, start + itemsPerPage).forEach(o => {
+              const tr = document.createElement('tr');
+              tr.className = 'hover:bg-gray-50';
+              tr.innerHTML = `
       <td class="p-3">${o.customerName}</td>
       <td class="p-3 font-mono">${o.orderId}</td>
       <td class="p-3">${o.customerPhone}</td>
@@ -211,406 +241,409 @@ function displayOrders() {
         <button onclick="openDetail('${o.orderId}')" class="bg-yellow-500 text-white px-2 py-1 rounded">Détail</button>
       </td>
     `;
-    t.appendChild(tr);
-  });
-}
+              t.appendChild(tr);
+            });
+          }
 
-function openDetail(id) {
-  currentOrder = allOrders.find(o => o.orderId === id);
-  if (!currentOrder) return;
-  document.getElementById('detailOrderId').innerText = currentOrder.orderId;
-  document.getElementById('detailName').innerText = currentOrder.customerName;
-  document.getElementById('detailPhone').innerText = currentOrder.customerPhone;
-  document.getElementById('callButton').href = `tel:${currentOrder.customerPhone}`;
-  document.getElementById('detailTime').innerText = currentOrder.pickupTime;
+          function openDetail(id) {
+            currentOrder = allOrders.find(o => o.orderId === id);
+            if (!currentOrder) return;
+            document.getElementById('detailOrderId').innerText = currentOrder.orderId;
+            document.getElementById('detailName').innerText = currentOrder.customerName;
+            document.getElementById('detailPhone').innerText = currentOrder.customerPhone;
+            document.getElementById('callButton').href = `tel:${currentOrder.customerPhone}`;
+            document.getElementById('detailTime').innerText = currentOrder.pickupTime;
 
-  const tableBody = document.querySelector('#detailItemsTable tbody');
-  tableBody.innerHTML = '';
-  currentOrder.items.forEach((item) => {
-    const row = document.createElement('tr');
-    row.innerHTML = `
+            const tableBody = document.querySelector('#detailItemsTable tbody');
+            tableBody.innerHTML = '';
+            currentOrder.items.forEach((item) => {
+              const row = document.createElement('tr');
+              row.innerHTML = `
       <td><input class="border p-1 w-full" value="${item.name}" /></td>
       <td><input type="number" class="border p-1 w-20" value="${item.quantity}" min="1"/></td>
       <td><input type="number" class="border p-1 w-24" value="${item.price.toFixed(2)}" step="0.01" min="0"/></td>
       <td><button onclick="removeItemRow(this)" class="text-red-600 hover:underline">Supprimer</button></td>
     `;
-    tableBody.appendChild(row);
-  });
+              tableBody.appendChild(row);
+            });
 
-  document.getElementById('detailStatus').value = currentOrder.status;
-  socket.emit('joinOrder', currentOrder.orderId);
-  document.getElementById('chatWindow').innerHTML = '';
-  document.getElementById('detailModal').classList.remove('hidden');
-}
+            document.getElementById('detailStatus').value = currentOrder.status;
+            socket.emit('joinOrder', currentOrder.orderId);
+            document.getElementById('chatWindow').innerHTML = '';
+            document.getElementById('detailModal').classList.remove('hidden');
+          }
 
 
-    function addItemRow() {
-      const row = document.createElement('tr');
-      row.innerHTML = `
+          function addItemRow() {
+            const row = document.createElement('tr');
+            row.innerHTML = `
     <td><input class="border p-1 w-full" placeholder="Nom du plat"/></td>
     <td><input type="number" class="border p-1 w-20" value="1" min="1"/></td>
     <td><input type="number" class="border p-1 w-24" value="0.00" step="0.01" min="0"/></td>
     <td><button onclick="removeItemRow(this)" class="text-red-600 hover:underline">Supprimer</button></td>
   `;
-      document.querySelector('#detailItemsTable tbody').appendChild(row);
-    }
-
-    function removeItemRow(button) {
-      button.closest('tr').remove();
-    }
-
-
-    function closeDetail() {
-      document.getElementById('detailModal').classList.add('hidden');
-      currentOrder = null;
-    }
-
-    async function saveDetail() {
-      const status = document.getElementById('detailStatus').value;
-
-      const rows = document.querySelectorAll('#detailItemsTable tbody tr');
-      const items = [...rows].map(row => {
-        const inputs = row.querySelectorAll('input');
-        return {
-          name: inputs[0].value.trim(),
-          quantity: parseInt(inputs[1].value),
-          price: parseFloat(inputs[2].value)
-        };
-      }).filter(item => item.name && item.quantity > 0 && item.price >= 0);
-
-      const res = await fetch(`${API_URL}/${currentOrder.orderId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ status, items })
-      });
-
-      if (res.ok) {
-        socket.emit('orderUpdated', { orderId: currentOrder.orderId });
-        fetchOrders();
-        closeDetail();
-      }
-    }
-function deleteOrder() {
-      const orderId = document.getElementById("detailOrderId").textContent;
-      if (confirm("Êtes-vous sûr de vouloir supprimer définitivement cette commande ?")) {
-        const token = localStorage.getItem("token");
-        if (!token) {
-          alert("Utilisateur non authentifié.");
-          return;
-        }
-        fetch(`/api/orders/${orderId}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
+            document.querySelector('#detailItemsTable tbody').appendChild(row);
           }
-        })
-        .then(res => res.json().then(data => ({ status: res.status, body: data })))
-        .then(({ status, body }) => {
-          if (status === 200 || status === 204) {
-            alert("Commande supprimée.");
-            closeDetail();
-            location.reload();
-          } else {
-            alert("Erreur lors de la suppression. Code: " + status + "\nMessage: " + (body.message || JSON.stringify(body)));
+
+          function removeItemRow(button) {
+            button.closest('tr').remove();
           }
-        })
-        .catch(err => {
-          console.error(err);
-          alert("Erreur réseau ou serveur.");
-        });
-      }
-    }
 
- function cancelOrder() {
-  if (!confirm("Confirmer l'annulation de cette commande ?")) return;
-  fetch(`${API_URL}/${currentOrder.orderId}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('token')}`
-    },
-    body: JSON.stringify({ status: 'cancelled' })
-  }).then(res => {
-    if (res.ok) {
-      socket.emit('orderUpdated', { orderId: currentOrder.orderId });
-      fetchOrders();
-      closeDetail();
-    } else {
-      alert("Erreur lors de l'annulation de la commande.");
-    }
-  }).catch(err => {
-    console.error(err);
-    alert("Erreur réseau ou serveur.");
-  });
+
+          function closeDetail() {
+            document.getElementById('detailModal').classList.add('hidden');
+            currentOrder = null;
+          }
+
+          async function saveDetail() {
+            const status = document.getElementById('detailStatus').value;
+
+            const rows = document.querySelectorAll('#detailItemsTable tbody tr');
+            const items = [...rows].map(row => {
+              const inputs = row.querySelectorAll('input');
+              return {
+                name: inputs[0].value.trim(),
+                quantity: parseInt(inputs[1].value),
+                price: parseFloat(inputs[2].value)
+              };
+            }).filter(item => item.name && item.quantity > 0 && item.price >= 0);
+
+            const res = await fetch(`${API_URL}/${currentOrder.orderId}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              },
+              body: JSON.stringify({ status, items })
+            });
+
+            if (res.ok) {
+              socket.emit('orderUpdated', { orderId: currentOrder.orderId });
+              fetchOrders();
+              closeDetail();
+            }
+          }
+          function deleteOrder() {
+            const orderId = document.getElementById("detailOrderId").textContent;
+            if (confirm("Êtes-vous sûr de vouloir supprimer définitivement cette commande ?")) {
+              const token = localStorage.getItem("token");
+              if (!token) {
+                alert("Utilisateur non authentifié.");
+                return;
+              }
+              fetch(`/api/orders/${orderId}`, {
+                method: 'DELETE',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                }
+              })
+                .then(res => res.json().then(data => ({ status: res.status, body: data })))
+                .then(({ status, body }) => {
+                  if (status === 200 || status === 204) {
+                    alert("Commande supprimée.");
+                    closeDetail();
+                    location.reload();
+                  } else {
+                    alert("Erreur lors de la suppression. Code: " + status + "\nMessage: " + (body.message || JSON.stringify(body)));
+                  }
+                })
+                .catch(err => {
+                  console.error(err);
+                  alert("Erreur réseau ou serveur.");
+                });
+            }
+          }
+
+          function cancelOrder() {
+            if (!confirm("Confirmer l'annulation de cette commande ?")) return;
+            fetch(`${API_URL}/${currentOrder.orderId}`, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+              },
+              body: JSON.stringify({ status: 'cancelled' })
+            }).then(res => {
+              if (res.ok) {
+                socket.emit('orderUpdated', { orderId: currentOrder.orderId });
+                fetchOrders();
+                closeDetail();
+              } else {
+                alert("Erreur lors de l'annulation de la commande.");
+              }
+            }).catch(err => {
+              console.error(err);
+              alert("Erreur réseau ou serveur.");
+            });
+          }
+
+
+
+          function sendReplacementProposal() {
+            const message = prompt("Proposez un remplacement au client :");
+            if (message && currentOrder?.orderId) {
+              socket.emit('adminMessage', {
+                orderId: currentOrder.orderId,
+                message: `[REMPLACEMENT] ${message}`,
+                sender: 'admin'
+              });
+              alert("Proposition envoyée.");
+            }
+          }
+
+          socket.on('chatMessage', data => {
+            if (currentOrder?.orderId !== data.orderId) return;
+            const chat = document.getElementById('chatWindow');
+            const bubble = document.createElement('div');
+            bubble.className = `my-1 p-2 rounded ${data.sender === 'admin' ? 'bg-blue-100 text-right' : 'bg-gray-200 text-left'}`;
+            bubble.textContent = `${data.message}`;
+            chat.appendChild(bubble);
+            chat.scrollTop = chat.scrollHeight;
+          });
+
+
+
+          function sendChat() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            console.log('Message to send:', message);
+            console.log('Current Order:', currentOrder);
+
+            if (!message || !currentOrder?.orderId) {
+              console.warn('Pas de message ou orderId manquant');
+              return;
+            }
+
+            socket.emit('adminMessage', {
+              orderId: currentOrder.orderId,
+              message,
+              sender: 'admin'
+            });
+
+            input.value = '';
+          }
+
+
+
+          socket.on('newClientMessage', ({ text, from }) => {
+            appendChat(from || "Client", text);
+          });
+          socket.on('newAdminMessage', ({ text }) => appendChat('Admin', text));
+          socket.on('orderUpdated', () => appendChat('Système', 'La commande a été mise à jour'));
+
+
+
+          function appendChat(sender, msg) {
+            const w = document.getElementById('chatWindow');
+            const div = document.createElement('div');
+            div.className = 'mb-2';
+            div.innerHTML = `<strong>${sender}:</strong> ${msg}`;
+            w.appendChild(div);
+            w.scrollTop = w.scrollHeight;
+          }
+
+          // INIT
+          fetchOrders();
+          document.getElementById('searchInput').oninput = () => { currentPage = 1; displayOrders() };
+          document.getElementById('orderIdInput').oninput = () => { currentPage = 1; displayOrders() };
+          document.getElementById('statusFilter').onchange = () => { currentPage = 1; displayOrders() };
+          document.getElementById('resetFilters').onclick = () => {
+            ['searchInput', 'orderIdInput', 'statusFilter'].forEach(id => {
+              document.getElementById(id).value = '';
+            });
+            currentPage = 1;
+            displayOrders();
+          };
+
+          document.getElementById('prevPage').onclick = () => {
+            if (currentPage > 1) { currentPage--; displayOrders(); }
+          };
+          document.getElementById('nextPage').onclick = () => {
+            const total = Math.ceil(allOrders.filter(o => {
+              const n = document.getElementById('searchInput').value.toLowerCase(),
+                i = document.getElementById('orderIdInput').value.toLowerCase(),
+                s = document.getElementById('statusFilter').value;
+              return (!n || o.customerName.toLowerCase().includes(n)) &&
+                (!i || o.orderId.toLowerCase().includes(i)) &&
+                (!s || o.status === s);
+            }).length / itemsPerPage);
+            if (currentPage < total) { currentPage++; displayOrders(); }
+          };
+
+          function loadComponent(page) {
+            const target = document.getElementById("mainContent");
+
+            fetch(`/${page}.html`)
+              .then((res) => {
+                if (!res.ok) throw new Error("Page non trouvée");
+                return res.text();
+              })
+              .then((html) => {
+                target.innerHTML = html;
+              })
+              .catch((err) => {
+                target.innerHTML = `<p class="text-red-500">Erreur de chargement : ${err.message}</p>`;
+              });
+
+            window.addEventListener('DOMContentLoaded', fetchOrders);
+
+            
+            document.getElementById('nextPage').addEventListener('click', () => {
+              const filt = allOrders.filter(o => {
+                const nameF = document.getElementById('searchInput').value.toLowerCase();
+                const idF = document.getElementById('orderIdInput').value.toLowerCase();
+                const stF = document.getElementById('statusFilter').value;
+                return (!nameF || o.customerName.toLowerCase().includes(nameF)) &&
+                  (!idF || o.orderId.toLowerCase().includes(idF)) &&
+                  (!stF || o.status === stF);
+              });
+              const totalPages = Math.ceil(filt.length / itemsPerPage);
+              if (currentPage < totalPages) {
+                currentPage++;
+                displayOrders();
+              }
+            });
+
+            ['searchInput', 'orderIdInput', 'statusFilter'].forEach(id => {
+              document.getElementById(id).addEventListener('input', () => {
+                currentPage = 1;
+                displayOrders();
+              });
+            });
+
+            document.getElementById('resetFilters').addEventListener('click', () => {
+              document.getElementById('searchInput').value = '';
+              document.getElementById('orderIdInput').value = '';
+              document.getElementById('statusFilter').value = '';
+              currentPage = 1;
+              displayOrders();
+            });
+
+            function closeDetail() {
+              if (currentOrder) {
+                socket.emit('leaveOrder', currentOrder.orderId);
+              }
+              document.getElementById('detailModal').classList.add('hidden');
+              currentOrder = null;
+            }
+
+          }
+
+
+          function sendChat() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+            socket.emit('adminMessage', {
+              orderId: currentOrder.orderId,
+              text: message,
+              sender: 'admin',
+            });
+            appendChatMessage({ message, sender: 'admin' });
+            input.value = '';
+          }
+
+          function appendChatMessage({ sender, message }) {
+            const chat = document.getElementById('chatWindow');
+            const p = document.createElement('p');
+            // p.innerHTML = `<strong>${sender === 'admin' }:</strong> ${message}`;
+            chat.appendChild(p);
+            chat.scrollTop = chat.scrollHeight;
+          }
+
+          socket.on('clientMessage', ({ orderId, message }) => {
+            if (currentOrder && currentOrder.orderId === orderId) {
+              appendChatMessage({ sender: 'client', message });
+            }
+          });
+
+
+        </script>
+        <script>
+          const token = localStorage.getItem('token');
+          const role = localStorage.getItem('role');
+
+          let notifications = [];
+
+          function toggleNotifications() {
+            const dropdown = document.getElementById('notifDropdown');
+            dropdown.classList.toggle('hidden');
+
+            if (!dropdown.classList.contains('hidden') && notifications.length === 0) {
+              fetch('/api/notifications', { headers: { 'Authorization': `Bearer ${token}` } })
+                .then(res => res.json())
+                .then(data => {
+                  notifications = data;
+                  renderNotifications();
+                })
+                .catch(() => {
+                  dropdown.innerHTML = '<div class="p-2 text-red-500">Erreur chargement notifications</div>';
+                });
+            }
+          }
+
+          function renderNotifications() {
+            const dropdown = document.getElementById('notifDropdown');
+            if (notifications.length === 0) {
+              dropdown.innerHTML = '<div class="p-2 text-gray-500">Aucune notification</div>';
+              document.getElementById('notifCount').textContent = '0';
+              return;
+            }
+
+            dropdown.innerHTML = notifications.map((n, index) => `
+    <div id="notif-${index}" class="flex justify-between items-center p-2 border-b hover:bg-gray-100 transition-opacity duration-300">
+      <span>${n.message}</span>
+      <button onclick="markAsRead(${index})" class="text-xs text-red-500 hover:underline ml-2">✓ lu</button>
+    </div>
+  `).join('');
+
+            document.getElementById('notifCount').textContent = notifications.length;
+          }
+
+          function markAsRead(index) {
+            const notifEl = document.getElementById(`notif-${index}`);
+            if (!notifEl) return;
+
+            notifEl.classList.add('opacity-0');
+
+            setTimeout(() => {
+              const notif = notifications[index];
+              notifications.splice(index, 1);
+              renderNotifications();
+
+              fetch(`/api/notifications/${notif.id}/read`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+              }).catch(err => console.error(err));
+            }, 300);
+          }
+
+          // Socket.IO
+          socket.on('new_notification', notification => {
+            notifications.unshift(notification);
+            renderNotifications();
+          });
+
+        </script>
+        <script>
+          function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            sidebar.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+          }
+
+          function showSection(sectionId) {
+  const sections = ['orders', 'clients', 'settings', 'addDish'];
+  sections.forEach(id => document.getElementById(id).classList.toggle('hidden', id !== sectionId));
+  if (window.innerWidth < 768) toggleSidebar();
 }
 
 
-
-    function sendReplacementProposal() {
-  const message = prompt("Proposez un remplacement au client :");
-  if (message && currentOrder?.orderId) {
-    socket.emit('adminMessage', {
-      orderId: currentOrder.orderId,
-      message: `[REMPLACEMENT] ${message}`,
-      sender: 'admin'
-    });
-    alert("Proposition envoyée.");
-  }
-}
-
-socket.on('chatMessage', data => {
-  if (currentOrder?.orderId !== data.orderId) return;
-  const chat = document.getElementById('chatWindow');
-  const bubble = document.createElement('div');
-  bubble.className = `my-1 p-2 rounded ${data.sender === 'admin' ? 'bg-blue-100 text-right' : 'bg-gray-200 text-left'}`;
-  bubble.textContent = `${data.message}`;
-  chat.appendChild(bubble);
-  chat.scrollTop = chat.scrollHeight;
-});
-
-
-
- function sendChat() {
-  const input = document.getElementById('chatInput');
-  const message = input.value.trim();
-  console.log('Message to send:', message);
-  console.log('Current Order:', currentOrder);
-
-  if (!message || !currentOrder?.orderId) {
-    console.warn('Pas de message ou orderId manquant');
-    return;
-  }
-  
-  socket.emit('adminMessage', {
-    orderId: currentOrder.orderId,
-    message,
-    sender: 'admin'
-  });
-
-  input.value = '';
-}
-
-
-
-socket.on('newClientMessage', ({ text, from }) => {
-  appendChat(from || "Client", text);
-});
-    socket.on('newAdminMessage', ({ text }) => appendChat('Admin', text));
-    socket.on('orderUpdated', () => appendChat('Système', 'La commande a été mise à jour'));
-  
-  
-    // test notif
-const currentUserId = localStorage.getItem('userId');
-const currentUserRole = localStorage.getItem('role');
-
-
-    socket.emit('register', {
-  userId: currentUserId, 
-  role: currentUserRole  
-});
-
-
-
-socket.on('new_notification', notification => {
-  console.log('🔔 Nouvelle notification :', notification.message);
-  
-  const container = document.getElementById('notifications-container');
-  if (container) {
-    const notifEl = document.createElement('div');
-    notifEl.className = 'notification-item bg-blue-100 p-2 mb-1 rounded shadow-sm';
-    notifEl.textContent = notification.message;
-    container.prepend(notifEl);
-  }
-});
-
-
- // fin test
-
-    function appendChat(sender, msg) {
-      const w = document.getElementById('chatWindow');
-      const div = document.createElement('div');
-      div.className = 'mb-2';
-      div.innerHTML = `<strong>${sender}:</strong> ${msg}`;
-      w.appendChild(div);
-      w.scrollTop = w.scrollHeight;
-    }
-
-    // INIT
-    fetchOrders();
-    document.getElementById('searchInput').oninput = () => { currentPage = 1; displayOrders() };
-    document.getElementById('orderIdInput').oninput = () => { currentPage = 1; displayOrders() };
-    document.getElementById('statusFilter').onchange = () => { currentPage = 1; displayOrders() };
-        document.getElementById('resetFilters').onclick = () => {
-      ['searchInput', 'orderIdInput', 'statusFilter'].forEach(id => {
-        document.getElementById(id).value = '';
-      });
-      currentPage = 1;
-      displayOrders();
-    };
-
-    document.getElementById('prevPage').onclick = () => {
-      if (currentPage > 1) { currentPage--; displayOrders(); }
-    };
-    document.getElementById('nextPage').onclick = () => {
-      const total = Math.ceil(allOrders.filter(o => {
-        const n = document.getElementById('searchInput').value.toLowerCase(),
-          i = document.getElementById('orderIdInput').value.toLowerCase(),
-          s = document.getElementById('statusFilter').value;
-        return (!n || o.customerName.toLowerCase().includes(n)) &&
-          (!i || o.orderId.toLowerCase().includes(i)) &&
-          (!s || o.status === s);
-      }).length / itemsPerPage);
-      if (currentPage < total) { currentPage++; displayOrders(); }
-    };
-
-    function loadComponent(page) {
-  const target = document.getElementById("mainContent");
-
-  fetch(`/${page}.html`)
-    .then((res) => {
-      if (!res.ok) throw new Error("Page non trouvée");
-      return res.text();
-    })
-    .then((html) => {
-      target.innerHTML = html;
-    })
-    .catch((err) => {
-      target.innerHTML = `<p class="text-red-500">Erreur de chargement : ${err.message}</p>`;
-    });
-
-  window.addEventListener('DOMContentLoaded', fetchOrders);
-
-document.getElementById('prevPage').addEventListener('click', () => {
-  if (currentPage > 1) {
-    currentPage--;
-    displayOrders();
-  }
-});
-
-document.getElementById('nextPage').addEventListener('click', () => {
-  const filt = allOrders.filter(o => {
-    const nameF = document.getElementById('searchInput').value.toLowerCase();
-    const idF = document.getElementById('orderIdInput').value.toLowerCase();
-    const stF = document.getElementById('statusFilter').value;
-    return (!nameF || o.customerName.toLowerCase().includes(nameF)) &&
-           (!idF || o.orderId.toLowerCase().includes(idF)) &&
-           (!stF || o.status === stF);
-  });
-  const totalPages = Math.ceil(filt.length / itemsPerPage);
-  if (currentPage < totalPages) {
-    currentPage++;
-    displayOrders();
-  }
-});
-
-['searchInput', 'orderIdInput', 'statusFilter'].forEach(id => {
-  document.getElementById(id).addEventListener('input', () => {
-    currentPage = 1;
-    displayOrders();
-  });
-});
-
-document.getElementById('resetFilters').addEventListener('click', () => {
-  document.getElementById('searchInput').value = '';
-  document.getElementById('orderIdInput').value = '';
-  document.getElementById('statusFilter').value = '';
-  currentPage = 1;
-  displayOrders();
-});
-
-function closeDetail() {
-  if (currentOrder) {
-    socket.emit('leaveOrder', currentOrder.orderId);
-  }
-  document.getElementById('detailModal').classList.add('hidden');
-  currentOrder = null;
-}
-
-function loadNotifications() {
-  const dropdown = document.getElementById('notifDropdown');
-  dropdown.classList.toggle('hidden');
-
-  if (!dropdown.classList.contains('hidden')) {
-    fetch('/api/notifications', {
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-    })
-      .then(res => res.json())
-      .then(data => {
-        dropdown.innerHTML = data.length
-          ? data.map(n => `<div class="p-2 border-b">${n.message}</div>`).join('')
-          : '<div class="p-2">Aucune notification</div>';
-        document.getElementById('notifCount').textContent = '0';
-      })
-      .catch(() => {
-        dropdown.innerHTML = '<div class="p-2 text-red-500">Erreur chargement notifications</div>';
-      });
-  }
-}
-
-socket.on('new_notification', notification => {
-  const notifCount = document.getElementById('notifCount');
-  notifCount.textContent = (parseInt(notifCount.textContent) + 1).toString();
-
-  const dropdown = document.getElementById('notifDropdown');
-  if (!dropdown.classList.contains('hidden')) {
-    const div = document.createElement('div');
-    div.className = 'p-2 border-b bg-blue-100';
-    div.textContent = notification.message;
-    dropdown.prepend(div);
-  }
-});
-
-
-socket.on('new_notification', notification => {
-  const notifCount = document.getElementById('notifCount');
-  notifCount.textContent = (parseInt(notifCount.textContent) + 1).toString();
-
-  // Ajouter notification dans dropdown si visible
-  const dropdown = document.getElementById('notifDropdown');
-  if (!dropdown.classList.contains('hidden')) {
-    const div = document.createElement('div');
-    div.className = 'p-2 border-b bg-blue-100';
-    div.textContent = notification.message;
-    dropdown.prepend(div);
-  }
-});
-
-
-}
-
-function sendChat() {
-  const input = document.getElementById('chatInput');
-  const message = input.value.trim();
-  if (!message) return;
-  socket.emit('adminMessage', {
-    orderId: currentOrder.orderId,
-    text: message,
-    sender: 'admin',
-  });
-  appendChatMessage({ message, sender: 'admin' });
-  input.value = '';
-}
-
-function appendChatMessage({ sender, message }) {
-  const chat = document.getElementById('chatWindow');
-  const p = document.createElement('p');
-  p.innerHTML = `<strong>${sender === 'admin' ? 'Vous' : 'Client'}:</strong> ${message}`;
-  chat.appendChild(p);
-  chat.scrollTop = chat.scrollHeight;
-}
-
-socket.on('clientMessage', ({ orderId, message }) => {
-  if (currentOrder && currentOrder.orderId === orderId) {
-    appendChatMessage({ sender: 'client', message });
-  }
-});
-
-
-  </script>
+          // Afficher Commandes par défaut
+          showSection('orders');
+        </script>
 
 </body>
 

@@ -3,186 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Suivi de commande</title>
+  <title>Suivi de commande - TRIPLE SIEBEN</title>
   <script src="/socket.io/socket.io.js"></script>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f9fafb;
-      margin: 0;
-      padding: 2rem;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      min-height: 100vh;
-    }
-
-    .container {
-      background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      max-width: 480px;
-      width: 100%;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-      text-align: center;
-    }
-
-    img.logo {
-      max-width: 180px;
-      margin: 0 auto 1.5rem auto;
-      display: block;
-    }
-
-    h1 {
-      font-size: 1.6rem;
-      margin-bottom: 0.4rem;
-      color: #333;
-    }
-
-    .animated-message {
-      font-style: italic;
-      color: hsl(44, 100%, 50%);
-      min-height: 1.3em;
-      margin-bottom: 2rem;
-      white-space: nowrap;
-      overflow: hidden;
-      border-right: 2px solid #007bff;
-      font-weight: 500;
-      font-size: 1.1rem;
-      user-select: none;
-    }
-
-    .timeline {
-      margin: 2rem 0;
-      padding-left: 1rem;
-      border-left: 4px solid #ccc;
-      text-align: left;
-    }
-
-    .step {
-      margin-bottom: 1.2rem;
-      position: relative;
-      padding-left: 1rem;
-      color: #666;
-    }
-
-    .step::before {
-      content: "";
-      position: absolute;
-      left: -11px;
-      top: 4px;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #ccc;
-    }
-
-    .step.active {
-      font-weight: bold;
-      color: #222;
-    }
-
-    .step.active::before {
-      background: #fdc407;
-    }
-
-    .refresh-btn,
-    .user-dashboard-btn {
-      background: hsl(32, 98%, 50%);
-      color: hwb(0 100% 0%);
-      border: none;
-      padding: 0.6rem 1.4rem;
-      font-size: 1rem;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      margin: 0.3rem auto;
-      display: block;
-      min-width: 220px;
-      user-select: none;
-    }
-
-    .refresh-btn:hover,
-    .user-dashboard-btn:hover {
-      background: hsl(0, 4%, 5%);
-      color: white;
-    }
-
-    .error {
-      color: red;
-      margin-top: 1rem;
-      min-height: 1.2em;
-    }
-
-    .order-details {
-      margin-top: 2rem;
-      padding: 1rem;
-      background: #f9fafb;
-      border-radius: 12px;
-      box-shadow: inset 0 0 0 1px #e5e7eb;
-      text-align: left;
-    }
-
-    .order-details h2 {
-      margin-bottom: 0.5rem;
-      font-size: 1.1rem;
-      color: #111;
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 0.5rem;
-    }
-
-    .order-details ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-
-    .order-details li {
-      display: flex;
-      justify-content: space-between;
-      padding: 0.4rem 0;
-      border-bottom: 1px dotted #ddd;
-      font-size: 0.95rem;
-    }
-
-    .order-details li:last-child {
-      border-bottom: none;
-    }
-
-    .order-details .total {
-      font-weight: bold;
-      font-size: 1rem;
-      margin-top: 0.75rem;
-      text-align: right;
-    }
-
-    .hidden {
-      display: none;
-    }
-  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
+<body class="bg-gray-100 min-h-screen flex justify-center items-start p-4">
+  <div class="bg-white rounded-2xl shadow-lg w-full max-w-md p-6 flex flex-col items-center">
+    <img src="/assets/logo.png" alt="Logo TRIPLE SIEBEN" class="w-40 mb-4" />
+    <h1 id="headerTitle" class="text-xl font-semibold text-gray-800 text-center mb-3">Suivi de la commande</h1>
+    <div id="animatedMsg" class="text-gray-600 italic min-h-[1.5rem] mb-6 text-center overflow-hidden border-r-2 border-blue-500"></div>
 
-<body>
-  <div class="container">
-    <img src="/assets/logo.png" alt="Logo TRIPLE SIEBEN" class="logo" />
-    <h1 id="headerTitle">Suivi de commande</h1>
-    <div id="animatedMsg" class="animated-message"></div>
+    <!-- Barre de progression -->
+    <div id="progressBar" class="w-full mb-6 relative flex items-center justify-between">
+      <div class="absolute top-1/2 left-0 right-0 h-1 bg-gray-300 transform -translate-y-1/2 rounded-full"></div>
+    </div>
 
-    <div id="statusTimeline" class="timeline"></div>
+    <!-- Détails de la commande -->
+    <div id="orderDetails" class="w-full bg-gray-50 rounded-xl p-4 shadow-inner hidden mb-6"></div>
 
-    <div id="orderDetails" class="order-details hidden"></div>
+    <!-- Buttons -->
+    <div class="w-full flex flex-col sm:flex-row gap-4">
+      <button id="refreshBtn" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition">Rafraîchir</button>
+      <button id="userDashboardBtn" class="flex-1 bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 rounded-xl transition">Mon espace client</button>
+    </div>
 
-    <button class="refresh-btn" id="refreshBtn">Rafraîchir manuellement</button>
-    <button class="user-dashboard-btn" id="userDashboardBtn">Mon espace client</button>
-
-    <div id="error" class="error"></div>
+    <div id="error" class="text-red-600 mt-4 min-h-[1.25rem] text-center"></div>
   </div>
 
   <script>
-    const API_BASE = "http://localhost:5000";
+    // ✅ Utilisation de l'API relative
+    const API_BASE = "/api"; // <-- ici le chemin relatif
     const orderId = new URLSearchParams(window.location.search).get('orderId');
     const token = localStorage.getItem('token');
-    const timelineEl = document.getElementById('statusTimeline');
+    const progressBar = document.getElementById('progressBar');
     const errorEl = document.getElementById('error');
     const refreshBtn = document.getElementById('refreshBtn');
     const userDashboardBtn = document.getElementById('userDashboardBtn');
@@ -192,21 +45,20 @@
     const steps = ["reçue", "en préparation", "prête", "livrée"];
 
     if (!orderId) {
-      timelineEl.innerHTML = '<div class="step error">Aucune commande spécifiée.</div>';
+      progressBar.innerHTML = '<div class="text-red-500 font-semibold text-center w-full">Aucune commande spécifiée.</div>';
       throw new Error("orderId manquant dans l'URL");
     }
 
     async function fetchUserInfo() {
       try {
-        const res = await fetch(`${API_BASE}/api/users/me`, {
+        const res = await fetch(`${API_BASE}/users/me`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error("Utilisateur non connecté");
         const user = await res.json();
         const nameToDisplay = user.fullName || user.username || "Client";
         headerTitle.textContent = `Bonjour ${nameToDisplay}, suivi de la commande n°${orderId}`;
-      } catch (err) {
-        console.warn("Erreur utilisateur :", err.message);
+      } catch {
         headerTitle.textContent = `Suivi de la commande n°${orderId}`;
       }
     }
@@ -243,11 +95,33 @@
       setTimeout(typeEffect, deleting ? 50 : 100);
     }
 
-    function renderTimeline(currentStatus) {
-      timelineEl.innerHTML = steps.map(step => {
+    function renderProgressBar(currentStatus) {
+      progressBar.innerHTML = '';
+      steps.forEach((step, idx) => {
         const isActive = steps.indexOf(step) <= steps.indexOf(currentStatus);
-        return `<div class="step${isActive ? ' active' : ''}">${step.charAt(0).toUpperCase() + step.slice(1)}</div>`;
-      }).join('');
+        const leftPercent = (idx / (steps.length - 1)) * 100;
+
+        const circle = document.createElement('div');
+        circle.className = `absolute transform -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-white font-semibold transition-colors duration-500 ${isActive ? 'bg-yellow-400' : 'bg-gray-300'}`;
+        circle.style.left = `${leftPercent}%`;
+        circle.textContent = idx + 1;
+
+        const label = document.createElement('span');
+        label.className = `absolute mt-6 text-xs font-medium ${isActive ? 'text-gray-800' : 'text-gray-400'}`;
+        label.style.left = `${leftPercent}%`;
+        label.style.transform = 'translateX(-50%)';
+        label.textContent = step.charAt(0).toUpperCase() + step.slice(1);
+
+        progressBar.appendChild(circle);
+        progressBar.appendChild(label);
+      });
+
+      const activeSteps = steps.indexOf(currentStatus);
+      const line = document.createElement('div');
+      line.className = 'absolute top-1/2 h-1 bg-yellow-400 rounded-full transition-all duration-500';
+      line.style.left = '0';
+      line.style.width = `${(activeSteps / (steps.length - 1)) * 100}%`;
+      progressBar.appendChild(line);
     }
 
     function renderOrderDetails(order) {
@@ -262,13 +136,13 @@
         const quantity = item.quantity || 1;
         const price = item.price || 0;
         total += quantity * price;
-        return `<li><span>${quantity}x ${item.name}</span><span>${(quantity * price).toFixed(2)} €</span></li>`;
+        return `<li class="flex justify-between py-1 border-b border-dotted border-gray-300">${quantity}x ${item.name}<span>${(quantity*price).toFixed(2)} €</span></li>`;
       }).join('');
 
       container.innerHTML = `
-        <h2>Détails de la commande</h2>
+        <h2 class="font-semibold text-gray-800 mb-2 border-b border-gray-300 pb-1">Détails de la commande</h2>
         <ul>${listItems}</ul>
-        <div class="total">Total : ${total.toFixed(2)} €</div>
+        <div class="text-right font-semibold mt-2">Total : ${total.toFixed(2)} €</div>
       `;
       container.classList.remove("hidden");
     }
@@ -276,16 +150,15 @@
     async function fetchOrderStatus() {
       refreshBtn.disabled = true;
       try {
-        const res = await fetch(`${API_BASE}/api/orders/${orderId}`, {
+        const res = await fetch(`${API_BASE}/orders/${orderId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error("Commande introuvable ou erreur serveur");
         const data = await res.json();
-        renderTimeline(data.status);
+        renderProgressBar(data.status);
         renderOrderDetails(data);
         errorEl.textContent = '';
       } catch (err) {
-        console.error("Erreur fetchOrderStatus:", err);
         errorEl.textContent = err.message || "Erreur lors de la récupération du statut.";
       } finally {
         refreshBtn.disabled = false;
@@ -299,7 +172,7 @@
     const socket = io({ auth: { token } });
     socket.on(`order-status-${orderId}`, (data) => {
       if (data.status) {
-        renderTimeline(data.status);
+        renderProgressBar(data.status);
       }
     });
 

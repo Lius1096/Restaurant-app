@@ -11,15 +11,19 @@
     .avatar-placeholder {
       @apply w-24 h-24 rounded-full bg-gray-300 flex items-center justify-center text-gray-500 font-bold text-2xl select-none;
     }
+
     #notificationCount {
       @apply bg-red-500 text-white text-xs py-0.5 px-2 rounded-full absolute -top-1 -right-1;
     }
   </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen flex flex-col md:flex-row">
-  <!-- Sidebar -->
-  <aside class="w-full md:w-64 bg-white shadow-md flex-shrink-0">
+<body class="bg-gray-100 min-h-screen flex">
+
+  <!-- Overlay mobile -->
+  <div id="overlay" class="fixed inset-0 bg-black bg-opacity-30 z-40 hidden" onclick="closeSidebar()"></div>
+  <aside id="sidebar"
+    class="fixed inset-y-0 left-0 w-64 bg-white shadow-md transform -translate-x-full md:translate-x-0 transition-transform duration-300 z-50">
     <div class="p-6 border-b text-center">
       <img id="userPhoto" alt="Photo Profil" class="w-24 h-24 rounded-full mb-2 object-cover hidden mx-auto" />
       <div id="userPhotoPlaceholder" class="avatar-placeholder mx-auto mb-2">U</div>
@@ -29,110 +33,160 @@
     <nav class="p-4">
       <ul class="space-y-3">
         <li>
-          <button onclick="showSection('ordersSection')" class="w-full text-left hover:bg-gray-200 p-2 rounded">Mes commandes</button>
+          <button onclick="navigate('ordersSection')" class="w-full text-left hover:bg-gray-200 p-2 rounded">Mes
+            commandes</button>
         </li>
         <li>
-          <button onclick="showSection('profileSection')" class="w-full text-left hover:bg-gray-200 p-2 rounded">Mon profil</button>
+          <button onclick="navigate('profileSection')" class="w-full text-left hover:bg-gray-200 p-2 rounded">Mon
+            profil</button>
         </li>
         <li>
-          <a href="index.html#menu" class="block w-full text-left hover:bg-gray-200 p-2 rounded">Passer une commande</a>
+          <a href="index.html#menu" onclick="closeSidebar()"
+            class="block w-full text-left hover:bg-gray-200 p-2 rounded">Passer une commande</a>
         </li>
         <li>
-          <button onclick="logout()" class="w-full text-left text-red-600 hover:bg-red-100 p-2 rounded">Déconnexion</button>
+          <button onclick="logout()"
+            class="w-full text-left text-red-600 hover:bg-red-100 p-2 rounded">Déconnexion</button>
         </li>
       </ul>
     </nav>
   </aside>
 
   <!-- Main -->
-  <main class="flex-1 p-4 md:p-6 overflow-auto">
-    <!-- Notification Bell -->
-    <section id="notifications" class="mb-6">
-      <div class="flex justify-end">
-        <button id="notificationButton" class="relative" aria-label="Afficher les notifications">
-          <svg class="w-8 h-8 text-gray-700 hover:text-black" fill="none" stroke="currentColor" stroke-width="2"
-            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C8.67 6.165 8 7.388 8 9v5.159c0 .538-.214 1.055-.595 1.436L6 17h5m4 0v1a3 3 0 11-6 0v-1m6 0H9" />
-          </svg>
-          <span id="notificationCount" class="hidden">0</span>
-        </button>
-        <div id="notificationList"
-          class="absolute right-4 top-14 bg-white shadow-xl rounded-md w-72 max-h-72 overflow-hidden hidden z-50">
-          <div class="sticky top-0 bg-white border-b border-gray-200 p-3 font-semibold text-gray-700">Notifications</div>
-          <ul id="notifications-container" class="max-h-60 overflow-y-auto divide-y divide-gray-200"></ul>
-          <div id="noNotifications" class="p-4 text-center text-gray-500 text-sm hidden">Aucune notification.</div>
+  <div class="flex-1 flex flex-col md:ml-64 transition-all duration-300">
+    <!-- Header mobile -->
+    <header class="bg-white shadow-md p-4 flex items-center justify-between md:hidden">
+      <button onclick="openSidebar()" class="text-gray-700 focus:outline-none">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
+        </svg>
+      </button>
+      <h1 class="text-xl font-bold">Dashboard</h1>
+      <div></div>
+    </header>
+
+
+    <main class="p-4 md:p-6 overflow-auto">
+      <!-- Notification Bell -->
+      <section id="notifications" class="mb-6">
+        <div class="flex justify-end relative">
+          <button id="notificationButton" class="relative" aria-label="Afficher les notifications">
+            <svg class="w-8 h-8 text-gray-700 hover:text-black" fill="none" stroke="currentColor" stroke-width="2"
+              viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C8.67 6.165 8 7.388 8 9v5.159c0 .538-.214 1.055-.595 1.436L6 17h5m4 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            <span id="notificationCount" class="hidden">0</span>
+          </button>
+          <div id="notificationList"
+            class="absolute right-0 top-10 bg-white shadow-xl rounded-md w-72 max-h-72 overflow-hidden hidden z-50">
+            <div class="sticky top-0 bg-white border-b border-gray-200 p-3 font-semibold text-gray-700">Notifications
+            </div>
+            <ul id="notifications-container" class="max-h-60 overflow-y-auto divide-y divide-gray-200"></ul>
+            <div id="noNotifications" class="p-4 text-center text-gray-500 text-sm hidden">Aucune notification.</div>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <!-- Orders Section -->
-    <section id="ordersSection" class="block">
-      <h1 class="text-2xl md:text-3xl font-bold mb-6">Mes commandes</h1>
-      <div id="ordersList" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
-    </section>
+      <!-- Orders Section -->
+      <section id="ordersSection" class="block">
+        <h1 class="text-2xl md:text-3xl font-bold mb-6">Mes commandes</h1>
+        <div id="ordersList" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"></div>
+      </section>
 
-    <!-- Profile Section -->
-    <section id="profileSection" class="hidden max-w-2xl">
-      <h1 class="text-2xl md:text-3xl font-bold mb-6">Mon profil</h1>
-      <form id="profileForm" class="bg-white p-6 rounded shadow space-y-4" enctype="multipart/form-data">
-        <div class="flex flex-col items-center">
-          <img id="profilePhotoPreview" alt="Photo Profil" class="w-28 h-28 rounded-full mb-4 object-cover hidden" />
-          <div id="profilePhotoPlaceholder" class="avatar-placeholder mb-4">U</div>
-          <input type="file" id="profilePhoto" accept="image/*" class="block w-full text-sm text-gray-500" />
+      <!-- Profile Section -->
+      <!-- Profile Section -->
+<section id="profileSection" class="hidden max-w-2xl mx-auto">
+  <h1 class="text-2xl md:text-3xl font-bold mb-6">Mon profil</h1>
+
+  <form id="profileForm" class="bg-white p-6 rounded-lg shadow space-y-6" enctype="multipart/form-data">
+
+    <!-- Upload photo -->
+    <div class="flex flex-col items-center">
+      <label for="profilePhoto" class="relative w-32 h-32 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 transition-colors">
+        <!-- Plus au centre -->
+        <span class="text-4xl text-gray-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">+</span>
+        <!-- Texte -->
+        <span class="absolute bottom-2 text-gray-500 text-sm text-center">Importer une photo</span>
+        <!-- Preview -->
+        <img id="profilePhotoPreview" alt="Photo Profil" class="w-32 h-32 rounded-lg object-cover hidden" />
+        <!-- Placeholder initiale -->
+        <div id="profilePhotoPlaceholder" class="w-32 h-32 rounded-lg bg-gray-300 flex items-center justify-center text-gray-500 font-bold text-2xl select-none">
+          U
         </div>
-        <div>
-          <label class="block mb-1 font-semibold" for="username">Nom d’utilisateur</label>
-          <input id="username" type="text"
-            class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200" required />
-        </div>
-        <div>
-          <label class="block mb-1 font-semibold" for="email">Email</label>
-          <input id="email" type="email"
-            class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200" required />
-        </div>
-        <div>
-          <label class="block mb-1 font-semibold" for="password">Nouveau mot de passe</label>
-          <input id="password" type="password"
-            class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
-            placeholder="Laissez vide pour ne pas changer" />
-        </div>
-        <button type="submit"
-          class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400">Sauvegarder</button>
-      </form>
-      <div id="profileMsg" class="mt-4 text-green-600 font-semibold"></div>
-    </section>
-  </main>
+        <input type="file" id="profilePhoto" accept="image/*" class="hidden" />
+      </label>
+    </div>
 
-   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-<script>
-  const token = localStorage.getItem("token");
+    <!-- Nom d’utilisateur -->
+    <div>
+      <label for="username" class="block mb-1 font-semibold">Nom d’utilisateur</label>
+      <input id="username" type="text"
+        class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200" required />
+    </div>
 
-  const socket = io("http://localhost:5000", {
-    auth: {
-      token: token
-    },
-    autoConnect: false
-  });
+    <!-- Email -->
+    <div>
+      <label for="email" class="block mb-1 font-semibold">Email</label>
+      <input id="email" type="email"
+        class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200" required />
+    </div>
 
-  // Important : réinjecter le token à chaque reconnexion
-  socket.io.on("reconnect_attempt", () => {
-    socket.auth.token = localStorage.getItem("token");
-  });
+    <!-- Mot de passe -->
+    <div>
+      <label for="password" class="block mb-1 font-semibold">Nouveau mot de passe</label>
+      <input id="password" type="password"
+        class="w-full border rounded px-3 py-2 focus:outline-none focus:ring focus:ring-blue-200"
+        placeholder="Laissez vide pour ne pas changer" />
+    </div>
 
-  socket.connect();
+    <!-- Bouton sauvegarder -->
+    <button type="submit"
+      class="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition">
+      Sauvegarder
+    </button>
+  </form>
 
-  socket.on("connect", () => {
-    console.log("✅ Socket connecté avec succès :", socket.id);
-  });
+  <!-- Message succès -->
+  <div id="profileMsg" class="mt-4 text-green-600 font-semibold text-center"></div>
+</section>
+    </main>
+  </div>
 
-  socket.on("connect_error", (err) => {
-    console.error("❌ Erreur de connexion socket :", err.message);
-  });
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    const token = localStorage.getItem("token");
+    const role = localStorage.getItem("role");
 
-  // Tu peux aussi exposer le socket pour les autres modules
-  window.userSocket = socket;
-</script>
+    if (!token || role !== 'user') {
+      logout();
+    }
+
+    const socket = io("http://localhost:5000", {
+      auth: {
+        token: token
+      },
+      autoConnect: false
+    });
+
+    // Important : réinjecter le token à chaque reconnexion
+    socket.io.on("reconnect_attempt", () => {
+      socket.auth.token = localStorage.getItem("token");
+    });
+
+    socket.connect();
+
+    socket.on("connect", () => {
+      console.log("✅ Socket connecté avec succès :", socket.id);
+    });
+
+    socket.on("connect_error", (err) => {
+      console.error("❌ Erreur de connexion socket :", err.message);
+    });
+
+    // Tu peux aussi exposer le socket pour les autres modules
+    window.userSocket = socket;
+  </script>
 
 
   <script>
@@ -163,40 +217,64 @@
       }
     }
 
-    // Gère affichage avatar ou placeholder
     function updateProfileUI() {
-      if (!userData) return;
-
-      // Sidebar
-      if (userData.photo) {
-        document.getElementById('userPhoto').src = userData.photo;
-        document.getElementById('userPhoto').classList.remove('hidden');
-        document.getElementById('userPhotoPlaceholder').classList.add('hidden');
-      } else {
-        document.getElementById('userPhoto').classList.add('hidden');
-        document.getElementById('userPhotoPlaceholder').classList.remove('hidden');
-        document.getElementById('userPhotoPlaceholder').textContent = (userData.username[0] || 'U').toUpperCase();
+      if (!userData) {
+        console.warn('userData non défini');
+        return;
       }
-      document.getElementById('userName').textContent = userData.username;
-      document.getElementById('userEmail').textContent = userData.email;
 
-      // Profil form
+      const username = userData.username || 'Utilisateur';
+      const firstChar = username.charAt(0).toUpperCase() || 'U';
+
+      // --- Sidebar ---
+      const userPhoto = document.getElementById('userPhoto');
+      const userPhotoPlaceholder = document.getElementById('userPhotoPlaceholder');
+      const userNameEl = document.getElementById('userName');
+      const userEmailEl = document.getElementById('userEmail');
+
       if (userData.photo) {
-        document.getElementById('profilePhotoPreview').src = userData.photo;
-        document.getElementById('profilePhotoPreview').classList.remove('hidden');
-        document.getElementById('profilePhotoPlaceholder').classList.add('hidden');
+        userPhoto.src = userData.photo;
+        userPhoto.classList.remove('hidden');
+        userPhotoPlaceholder.classList.add('hidden');
       } else {
-        document.getElementById('profilePhotoPreview').classList.add('hidden');
-        document.getElementById('profilePhotoPlaceholder').classList.remove('hidden');
-        document.getElementById('profilePhotoPlaceholder').textContent = (userData.username[0] || 'U').toUpperCase();
+        userPhoto.classList.add('hidden');
+        userPhotoPlaceholder.classList.remove('hidden');
+        userPhotoPlaceholder.textContent = firstChar;
       }
-      document.getElementById('username').value = userData.username;
-      document.getElementById('email').value = userData.email;
+
+      userNameEl.textContent = username;
+      userEmailEl.textContent = userData.email || '';
+
+      // --- Profil form ---
+      const profilePhotoPreview = document.getElementById('profilePhotoPreview');
+      const profilePhotoPlaceholder = document.getElementById('profilePhotoPlaceholder');
+      const usernameInput = document.getElementById('username');
+      const emailInput = document.getElementById('email');
+
+      if (userData.photo) {
+        profilePhotoPreview.src = userData.photo;
+        profilePhotoPreview.classList.remove('hidden');
+        profilePhotoPlaceholder.classList.add('hidden');
+      } else {
+        profilePhotoPreview.classList.add('hidden');
+        profilePhotoPlaceholder.classList.remove('hidden');
+        profilePhotoPlaceholder.textContent = firstChar;
+      }
+
+      usernameInput.value = username;
+      emailInput.value = userData.email || '';
     }
 
+    console.log('Token envoyé:', localStorage.getItem('token'));
+
+
+
     async function fetchOrders() {
+      console.log('Token envoyé:', localStorage.getItem('token'));
+
       try {
-        const res = await fetch(`${API_BASE}/orders`, {
+
+        const res = await fetch(`${API_BASE}/orders/my`, {
           headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
         });
         if (!res.ok) {
@@ -212,43 +290,22 @@
       }
     }
 
-    // function displayOrders() {
-    //   const container = document.getElementById('ordersList');
-    //   container.innerHTML = '';
-    //   if (!userOrders.length) {
-    //     container.innerHTML = '<p class="text-gray-600">Aucune commande.</p>';
-    //     return;
-    //   }
-    //   userOrders.forEach(order => {
-    //     const div = document.createElement('div');
-    //     div.className = 'bg-white p-4 rounded shadow flex justify-between items-center';
-    //     div.innerHTML = `
-    //       <div>
-    //         <p><strong>Commande :</strong> <span class="font-mono">${order.orderId || order._id}</span></p>
-    //         <p><strong>Statut :</strong> <span class="capitalize">${order.status}</span></p>
-    //         <p><strong>Heure :</strong> ${order.pickupTime || '-'}</p>
-    //       </div>
-    //       <button class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded" onclick="openOrderDetail('${order._id}')">Détails</button>
-    //     `;
-    //     container.appendChild(div);
-    //   });
-    // }
 
     function displayOrders() {
-  const container = document.getElementById('ordersList');
-  container.innerHTML = '';
+      const container = document.getElementById('ordersList');
+      container.innerHTML = '';
 
-  if (!userOrders.length) {
-    container.innerHTML = '<p class="text-gray-600">Aucune commande.</p>';
-    return;
-  }
+      if (!userOrders.length) {
+        container.innerHTML = '<p class="text-gray-600">Aucune commande.</p>';
+        return;
+      }
 
-  userOrders.forEach(order => {
-    const orderId = order.orderId || order._id;
-    const div = document.createElement('div');
-    div.className = 'bg-white p-4 rounded shadow';
+      userOrders.forEach(order => {
+        const orderId = order.orderId || order._id;
+        const div = document.createElement('div');
+        div.className = 'bg-white p-4 rounded shadow';
 
-    div.innerHTML = `
+        div.innerHTML = `
       <div class="flex justify-between items-center">
         <div>
           <p><strong>Commande :</strong> <span class="font-mono">${orderId}</span></p>
@@ -263,46 +320,46 @@
       <div id="timeline-${order._id}" class="mt-4 hidden"></div>
     `;
 
-    container.appendChild(div);
-  });
-}
+        container.appendChild(div);
+      });
+    }
 
-function toggleTimeline(orderId, status) {
-  const timelineEl = document.getElementById(`timeline-${orderId}`);
-  const isVisible = !timelineEl.classList.contains('hidden');
+    function toggleTimeline(orderId, status) {
+      const timelineEl = document.getElementById(`timeline-${orderId}`);
+      const isVisible = !timelineEl.classList.contains('hidden');
 
-  if (isVisible) {
-    timelineEl.classList.add('hidden');
-    timelineEl.innerHTML = '';
-  } else {
-    updateTimeline(orderId, status);
-    timelineEl.classList.remove('hidden');
-  }
-}
+      if (isVisible) {
+        timelineEl.classList.add('hidden');
+        timelineEl.innerHTML = '';
+      } else {
+        updateTimeline(orderId, status);
+        timelineEl.classList.remove('hidden');
+      }
+    }
 
-function updateTimeline(orderId, status) {
-  const steps = ["reçue", "en préparation", "prête", "livrée"];
-  const timelineEl = document.getElementById(`timeline-${orderId}`);
+    function updateTimeline(orderId, status) {
+      const steps = ["reçue", "en préparation", "prête", "livrée"];
+      const timelineEl = document.getElementById(`timeline-${orderId}`);
 
-  const html = steps.map(step => {
-    const active = steps.indexOf(step) <= steps.indexOf(status);
-    return `
+      const html = steps.map(step => {
+        const active = steps.indexOf(step) <= steps.indexOf(status);
+        return `
       <div class="mb-2 relative pl-6 ${active ? 'text-black font-semibold' : 'text-gray-400'}">
         <div class="absolute -left-3 top-1 w-3 h-3 rounded-full ${active ? 'bg-yellow-500' : 'bg-gray-300'}"></div>
         ${step}
       </div>
     `;
-  }).join('');
+      }).join('');
 
-  timelineEl.innerHTML = html;
-}
+      timelineEl.innerHTML = html;
+    }
 
 
-socket.on('order-status-updated', data => {
-  if (data.orderId && data.status) {
-    updateTimeline(data.orderId, data.status);
-  }
-});
+    socket.on('order-status-updated', data => {
+      if (data.orderId && data.status) {
+        updateTimeline(data.orderId, data.status);
+      }
+    });
 
 
 
@@ -464,64 +521,6 @@ socket.on('order-status-updated', data => {
 
 
 
-    // fin test
-    // Upload photo de profil - preview locale
-    document.getElementById('profilePhoto').addEventListener('change', function () {
-      const file = this.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = e => {
-        document.getElementById('profilePhotoPreview').src = e.target.result;
-        document.getElementById('profilePhotoPreview').classList.remove('hidden');
-        document.getElementById('profilePhotoPlaceholder').classList.add('hidden');
-      };
-      reader.readAsDataURL(file);
-    });
-
-    // Soumission formulaire profil (upload + champs)
-    document.getElementById('profileForm').addEventListener('submit', async e => {
-      e.preventDefault();
-      const form = e.target;
-      const formData = new FormData();
-
-      const username = form.username.value.trim();
-      const email = form.email.value.trim();
-      const password = form.password.value.trim();
-      const photoFile = form.profilePhoto.files[0];
-
-      if (!username || !email) {
-        alert('Nom et email obligatoires');
-        return;
-      }
-
-      formData.append('username', username);
-      formData.append('email', email);
-      if (password) formData.append('password', password);
-      if (photoFile) formData.append('photo', photoFile);
-
-      try {
-        const res = await fetch(`${API_BASE}/users/me`, {
-          method: 'PUT',
-          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-          body: formData
-        });
-        if (!res.ok) {
-      alert('Erreur mise à jour : ' + (error.message || res.statusText));
-          return;
-        }
-        const updatedUser = await res.json();
-    userData = updatedUser;
-    updateProfileUI();
-    document.getElementById('profileMsg').textContent = 'Profil mis à jour avec succès.';
-    setTimeout(() => {
-      document.getElementById('profileMsg').textContent = '';
-    }, 3000);
-  } catch (e) {
-    console.error('Erreur update profile:', e);
-    alert('Erreur serveur lors de la mise à jour du profil.');
-  }
-    });
-
     // Déconnexion simple
     function logout() {
       localStorage.removeItem('token');
@@ -630,6 +629,94 @@ socket.on('order-status-updated', data => {
     }
 
   </script>
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    function openSidebar() {
+      sidebar.classList.remove('-translate-x-full');
+      overlay.classList.remove('hidden');
+    }
+
+    function closeSidebar() {
+      sidebar.classList.add('-translate-x-full');
+      overlay.classList.add('hidden');
+    }
+
+    function navigate(sectionId) {
+      document.querySelectorAll('main section').forEach(sec => sec.classList.add('hidden'));
+      document.getElementById(sectionId).classList.remove('hidden');
+      closeSidebar(); // fermer le sidebar après clic
+    }
+  </script>
+
+  <script>
+  const profilePhotoInput = document.getElementById('profilePhoto');
+  const profilePhotoPreview = document.getElementById('profilePhotoPreview');
+  const profilePhotoPlaceholder = document.getElementById('profilePhotoPlaceholder');
+
+  // Preview locale de l'image sélectionnée
+  profilePhotoInput.addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      profilePhotoPreview.src = e.target.result;
+      profilePhotoPreview.classList.remove('hidden');
+      profilePhotoPlaceholder.classList.add('hidden');
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // Mettre à jour le formulaire profil
+  document.getElementById('profileForm').addEventListener('submit', async e => {
+    e.preventDefault();
+
+    const form = e.target;
+    const formData = new FormData();
+    const username = form.username.value.trim();
+    const email = form.email.value.trim();
+    const password = form.password.value.trim();
+    const photoFile = form.profilePhoto.files[0];
+
+    if (!username || !email) {
+      alert('Nom et email obligatoires');
+      return;
+    }
+
+    formData.append('username', username);
+    formData.append('email', email);
+    if (password) formData.append('password', password);
+    if (photoFile) formData.append('photo', photoFile);
+
+    try {
+      const res = await fetch(`${API_BASE}/users/me`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+        body: formData
+      });
+
+      if (!res.ok) {
+        alert('Erreur mise à jour : ' + res.statusText);
+        return;
+      }
+
+      const updatedUser = await res.json();
+      userData = updatedUser;
+
+      // Met à jour UI
+      updateProfileUI();
+
+      document.getElementById('profileMsg').textContent = 'Profil mis à jour avec succès.';
+      setTimeout(() => document.getElementById('profileMsg').textContent = '', 3000);
+
+    } catch (e) {
+      console.error('Erreur update profile:', e);
+      alert('Erreur serveur lors de la mise à jour du profil.');
+    }
+  });
+</script>
 
 </body>
 

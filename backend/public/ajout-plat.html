@@ -1,54 +1,76 @@
 <!DOCTYPE html>
 <html lang="fr">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Ajouter un plat</title>
+  <title>Gestion des plats</title>
   <script src="https://kit.fontawesome.com/a076d05399.js" crossorigin="anonymous"></script>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .dropzone {
+      border: 2px dashed #f59e0b;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .dropzone.dragover {
+      background: #fef3c7;
+    }
+    .preview-img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 0.5rem;
+    }
+  </style>
 </head>
+<body class="bg-gray-50 p-6">
 
-<body>
+  <!-- Bouton pour ouvrir modal -->
+  <button onclick="openAddDishModal()"
+    class="mb-6 px-6 py-3 bg-amber-500 text-white font-semibold rounded-lg hover:bg-amber-600">
+    + Ajouter un plat
+  </button>
 
-  <!-- Modal d'ajout de plat (admin) -->
+  <!-- Conteneur des plats -->
+  <div id="dishes-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6"></div>
+
+  <!-- Modal -->
   <div id="add-dish-modal" class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50 hidden">
     <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
       <div class="p-6">
         <div class="flex justify-between items-center mb-4">
-          <h3 class="text-xl font-bold">Ajouter un nouveau plat</h3>
-          <button id="close-add-dish-modal" class="text-gray-500 hover:text-gray-700 text-xl">
-            &times;
-          </button>
+          <h3 class="text-xl font-bold" id="modal-title">Ajouter un nouveau plat</h3>
+          <button id="close-add-dish-modal" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
         </div>
 
-        <form id="add-dish-form" class="space-y-4">
+        <form id="add-dish-form" enctype="multipart/form-data" class="space-y-4">
+          <input type="hidden" id="dish-id" name="id">
+
           <div>
             <label for="dish-name" class="block text-gray-700 mb-2">Nom du plat</label>
-            <input type="text" id="dish-name"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-              required />
+            <input type="text" id="dish-name" name="name" required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500" />
           </div>
 
           <div>
             <label for="dish-description" class="block text-gray-700 mb-2">Description</label>
-            <textarea id="dish-description" rows="3"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-              required></textarea>
+            <textarea id="dish-description" name="description" rows="3" required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"></textarea>
           </div>
 
           <div>
             <label for="dish-price" class="block text-gray-700 mb-2">Prix (€)</label>
-            <input type="number" id="dish-price" step="0.01" min="0"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-              required />
+            <input type="number" id="dish-price" name="price" step="0.01" min="0" required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500" />
           </div>
 
           <div>
             <label for="dish-category" class="block text-gray-700 mb-2">Catégorie</label>
-            <select id="dish-category"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-              required>
+            <select id="dish-category" name="category" required
+              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500">
               <option value="">Sélectionnez une catégorie</option>
               <option value="starters">Entrées</option>
               <option value="mains">Plats Principaux</option>
@@ -58,79 +80,210 @@
           </div>
 
           <div>
-            <label for="dish-image" class="block text-gray-700 mb-2">URL de l'image</label>
-            <input type="url" id="dish-image"
-              class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
-              required />
+            <label class="block text-gray-700 mb-2">Images du plat</label>
+            <div id="dropzone" class="dropzone mb-2">
+              Glissez vos images ici ou cliquez pour sélectionner
+            </div>
+            <input type="file" id="dish-images" name="images" accept="image/*" multiple class="hidden">
+            <div id="preview-container" class="flex flex-wrap gap-2 mt-2"></div>
           </div>
 
-          <button type="submit"
-            class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
-            Ajouter le plat
-          </button>
+          <div class="flex gap-2">
+            <button type="submit"
+              class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
+              Ajouter / Modifier le plat
+            </button>
+            <button type="button" id="delete-dish-btn"
+              class="hidden bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition duration-300">
+              Supprimer
+            </button>
+          </div>
         </form>
       </div>
     </div>
   </div>
 
-  <!-- Bouton pour afficher le modal -->
-  <button onclick="openAddDishModal()"
-    class="mt-4 px-6 py-3 bg-amber-500 text-white font-semibold rounded-lg hover:bg-amber-600">
-    + Ajouter un plat
-  </button>
-
-  <!-- Script JavaScript -->
   <script>
     const addDishModal = document.getElementById("add-dish-modal");
     const closeAddDishModal = document.getElementById("close-add-dish-modal");
+    const dropzone = document.getElementById("dropzone");
+    const fileInput = document.getElementById("dish-images");
+    const previewContainer = document.getElementById("preview-container");
+    const dishesContainer = document.getElementById("dishes-container");
+    const modalTitle = document.getElementById("modal-title");
+    const dishIdInput = document.getElementById("dish-id");
+    const deleteBtn = document.getElementById("delete-dish-btn");
 
-    function openAddDishModal() {
+    let selectedFiles = [];
+    let existingImages = [];
+
+    function openAddDishModal(editDish = null) {
       addDishModal.classList.remove("hidden");
+
+      if (editDish) {
+        modalTitle.textContent = "Modifier le plat";
+        dishIdInput.value = editDish._id;
+        document.getElementById("dish-name").value = editDish.name;
+        document.getElementById("dish-description").value = editDish.description;
+        document.getElementById("dish-price").value = editDish.price;
+        document.getElementById("dish-category").value = editDish.category;
+
+        selectedFiles = [];
+        existingImages = [...(editDish.images || [])];
+        previewContainer.innerHTML = "";
+
+        existingImages.forEach(url => addPreviewImage(url, false, true));
+        deleteBtn.classList.remove("hidden");
+      } else {
+        modalTitle.textContent = "Ajouter un nouveau plat";
+        dishIdInput.value = "";
+        document.getElementById("add-dish-form").reset();
+        previewContainer.innerHTML = "";
+        selectedFiles = [];
+        existingImages = [];
+        deleteBtn.classList.add("hidden");
+      }
     }
 
     closeAddDishModal.addEventListener("click", () => {
       addDishModal.classList.add("hidden");
     });
 
-    document.getElementById("add-dish-form").addEventListener("submit", async function (e) {
+    dropzone.addEventListener("click", () => fileInput.click());
+    dropzone.addEventListener("dragover", e => {
       e.preventDefault();
+      dropzone.classList.add("dragover");
+    });
+    dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+    dropzone.addEventListener("drop", e => {
+      e.preventDefault();
+      dropzone.classList.remove("dragover");
+      handleFiles(e.dataTransfer.files);
+    });
+    fileInput.addEventListener("change", () => handleFiles(fileInput.files));
 
-      const name = document.getElementById("dish-name").value.trim();
-      const description = document.getElementById("dish-description").value.trim();
-      const price = parseFloat(document.getElementById("dish-price").value);
-      const category = document.getElementById("dish-category").value;
-      const image = document.getElementById("dish-image").value.trim();
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        alert("Vous devez être connecté.");
-        return;
+    function handleFiles(files) {
+      for (let file of files) {
+        selectedFiles.push(file);
+        addPreviewImage(URL.createObjectURL(file), true, false);
       }
+    }
+
+    function addPreviewImage(src, removable = true, isExisting = false) {
+      const wrapper = document.createElement("div");
+      wrapper.className = "relative";
+
+      const img = document.createElement("img");
+      img.src = src;
+      img.className = "preview-img";
+      wrapper.appendChild(img);
+
+      const btn = document.createElement("button");
+      btn.innerHTML = "&times;";
+      btn.className = "absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs";
+      btn.addEventListener("click", () => {
+        wrapper.remove();
+        if (isExisting) {
+          existingImages = existingImages.filter(url => url !== src);
+        } else {
+          selectedFiles = selectedFiles.filter(f => URL.createObjectURL(f) !== src);
+        }
+      });
+      wrapper.appendChild(btn);
+
+      previewContainer.appendChild(wrapper);
+    }
+
+    // Soumission du formulaire
+    document.getElementById("add-dish-form").addEventListener("submit", async function(e){
+      e.preventDefault();
+      const token = localStorage.getItem("token");
+      if (!token) { alert("Vous devez être connecté."); return; }
+
+      const formData = new FormData(this);
+      selectedFiles.forEach(file => formData.append("images", file));
+      formData.append("existingImages", JSON.stringify(existingImages));
 
       try {
-        const response = await fetch("/api/dishes", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({ name, description, price, category, image })
+        const id = dishIdInput.value;
+        const url = id ? `/api/dishes/${id}` : "/api/dishes";
+        const method = id ? "PUT" : "POST";
+
+        const response = await fetch(url, {
+          method,
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData
         });
 
+        const data = await response.json();
         if (response.ok) {
-          alert("Plat ajouté avec succès !");
+          alert("✅ Plat enregistré !");
           addDishModal.classList.add("hidden");
           this.reset();
+          loadDishes();
         } else {
-          const err = await response.json();
-          alert("Erreur : " + (err.message || "Impossible d'ajouter le plat."));
+          alert("❌ Erreur : " + (data.message || "Impossible d'ajouter le plat."));
         }
-      } catch (error) {
-        alert("Erreur réseau : " + error.message);
+      } catch (err) {
+        alert("⚠️ Erreur réseau : " + err.message);
       }
     });
+
+    // Suppression d’un plat
+    deleteBtn.addEventListener("click", async () => {
+      if (!confirm("Voulez-vous vraiment supprimer ce plat ?")) return;
+      const id = dishIdInput.value;
+      const token = localStorage.getItem("token");
+      if (!id || !token) return;
+
+      try {
+        const res = await fetch(`/api/dishes/${id}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          alert("🗑️ Plat supprimé !");
+          addDishModal.classList.add("hidden");
+          loadDishes();
+        } else {
+          alert("❌ Erreur lors de la suppression.");
+        }
+      } catch (err) {
+        alert("⚠️ Erreur réseau : " + err.message);
+      }
+    });
+
+    // Charger et afficher les plats
+    async function loadDishes() {
+      dishesContainer.innerHTML = "Chargement...";
+      try {
+        const res = await fetch("/api/dishes");
+        const dishes = await res.json();
+        renderDishes(dishes);
+      } catch (err) {
+        dishesContainer.innerHTML = "<p class='text-red-500'>Erreur lors du chargement des plats</p>";
+      }
+    }
+
+    function renderDishes(dishes) {
+      dishesContainer.innerHTML = "";
+      dishes.forEach(dish => {
+        const card = document.createElement("div");
+        card.className = "bg-white rounded-lg shadow-md p-4 flex flex-col";
+        card.innerHTML = `
+          <img src="${dish.images[0] || ''}" alt="${dish.name}" class="w-full h-48 object-cover rounded mb-2">
+          <h3 class="font-semibold text-lg mb-1">${dish.name}</h3>
+          <p class="text-gray-600 text-sm mb-2">${dish.description}</p>
+          <div class="flex justify-between items-center">
+            <span class="text-amber-600 font-bold">${dish.price.toFixed(2)} €</span>
+            <button class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded" onclick='openAddDishModal(${JSON.stringify(dish)})'>Modifier</button>
+          </div>
+        `;
+        dishesContainer.appendChild(card);
+      });
+    }
+
+    loadDishes();
   </script>
-
 </body>
-
 </html>
